@@ -1,6 +1,6 @@
 ﻿using Azure;
 using Knowledge_Center_API.Models;
-using Knowledge_Center_API.Queries;
+using Knowledge_Center_API.DataAccess;
 using Knowledge_Center_API.Services.Validation;
 using Microsoft.Data.SqlClient;
 using System;
