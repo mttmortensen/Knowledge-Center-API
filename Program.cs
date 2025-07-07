@@ -14,6 +14,7 @@ namespace Knowledge_Center_API
             builder.Services.AddScoped<Services.Core.KnowledgeNodeService>();
             builder.Services.AddScoped<Services.Core.DomainService>();
             builder.Services.AddScoped<Services.Core.LogEntryService>();
+            builder.Services.AddScoped<Services.Core.TagService>();
 
             // === Add Controllers and Swagger ===
             builder.Services.AddControllers();
