@@ -34,5 +34,31 @@ namespace Knowledge_Center_API.Controllers
 
             return Ok(domain);
         }
+
+        // === POST /api/domains ===
+        [HttpPost]
+        public IActionResult Create([FromBody] Domain domain) 
+        {
+            // Later: Adding Auth and Rate Limiting middleware later
+
+            bool success = _domainService.CreateDomain(domain);
+            if (!success)
+                return StatusCode(500, new { message = "Domain creation failed. " });
+
+            return CreatedAtAction(nameof(GetById), new { id = domain.DomainId }, domain);
+        }
+
+        // === PUT /api/domains/{id} ===
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] Domain domain) 
+        {
+            domain.DomainId = id;
+
+            bool success = _domainService.UpdateDomain(domain);
+            if (!success)
+                return StatusCode(500, new { message = "Domain update failed. " });
+
+            return Ok(domain);
+        }
     }
 }
