@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Knowledge_Center.Services.Security
+namespace Knowledge_Center_API.Services.Security
 {
     public class AuthSession
     {

@@ -1,7 +1,7 @@
 ﻿using Azure;
-using Knowledge_Center.Models;
-using Knowledge_Center.Queries;
-using Knowledge_Center.Services.Validation;
+using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Queries;
+using Knowledge_Center_API.Services.Validation;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Knowledge_Center.Services.Core
+namespace Knowledge_Center_API.Services.Core
 {
     public class TagService
     {

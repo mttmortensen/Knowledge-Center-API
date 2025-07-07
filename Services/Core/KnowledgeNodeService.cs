@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
-using Knowledge_Center.Models;
-using Knowledge_Center.Services.Validation;
+using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Services.Validation;
 using System.Data;
 
-namespace Knowledge_Center.Services.Core
+namespace Knowledge_Center_API.Services.Core
 {
     public class KnowledgeNodeService
     {
