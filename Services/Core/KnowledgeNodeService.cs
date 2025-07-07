@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Services.Validation;
+using Knowledge_Center_API.DataAccess;
 using System.Data;
 
 namespace Knowledge_Center_API.Services.Core

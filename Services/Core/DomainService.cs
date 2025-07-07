@@ -1,5 +1,6 @@
 ﻿using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Services.Validation;
+using Knowledge_Center_API.DataAccess;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
