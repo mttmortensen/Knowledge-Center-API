@@ -60,5 +60,17 @@ namespace Knowledge_Center_API.Controllers
 
             return Ok(domain);
         }
+
+
+        // === DELETE /api/domains/{id} ===
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            bool success = _domainService.DeleteDomain(id);
+            if (!success)
+                return StatusCode(500, new { message = "Domain not found or delete failed." });
+
+            return Ok(new { message = "Domain deleted" });
+        }
     }
 }
