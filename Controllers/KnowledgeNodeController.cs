@@ -36,5 +36,47 @@ namespace Knowledge_Center_API.Controllers
             return Ok(node);
         }
 
+        // === POST /api/knowledgeNodes ===
+        [HttpPost]
+        public IActionResult Create([FromBody] KnowledgeNode node)
+        {
+            // (Optional) Auth & rate limit middleware would go here
+
+            bool success = _knowledgeNodeService.CreateNode(node);
+            if (!success)
+                return StatusCode(500, new { message = "Failed to create node." });
+
+            return CreatedAtAction(nameof(GetById), new { id = node.Id }, node);
+        }
+
+        // === PUT /api/knowledgeNodes/{id} ===
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] KnowledgeNode node)
+        {
+            node.Id = id;
+
+            bool success = _knowledgeNodeService.UpdateNode(node);
+            if (!success)
+                return StatusCode(500, new { message = "Node not found or update failed." });
+
+            return Ok(node);
+        }
+
+        // === DELETE /api/knowledgeNodes/{id} ===
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            // Delete all logs associated with the node
+            bool logsDeleted = _logEntryService.DeleteAllLogEntriesByNodeId(id);
+            if (!logsDeleted)
+                return StatusCode(500, new { message = "Failed to delete related logs." });
+
+            // Now delete the node
+            bool nodeDeleted = _knowledgeNodeService.DeleteNode(id);
+            if (!nodeDeleted)
+                return StatusCode(500, new { message = "Node not found or delete failed." });
+
+            return Ok(new { message = "Node and related logs deleted successfully." });
+        }
     }
 }
