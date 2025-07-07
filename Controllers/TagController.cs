@@ -14,9 +14,8 @@ namespace Knowledge_Center_API.Controllers
         {
             _tagService = tagService;
         }
-    }
 
-            // === GET /api/tags ===
+        // === GET /api/tags ===
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -35,4 +34,40 @@ namespace Knowledge_Center_API.Controllers
             return Ok(tag);
         }
 
+        // === POST /api/tags ===
+        [HttpPost]
+        public IActionResult Create([FromBody] Tags tag)
+        {
+            bool success = _tagService.CreateTag(tag);
+            if (!success)
+                return StatusCode(500, new { message = "Failed to create tag." });
+
+            return CreatedAtAction(nameof(GetById), new { id = tag.TagId }, tag);
+        }
+
+        // === PUT /api/tags/{id} ===
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] Tags tag)
+        {
+            tag.TagId = id;
+
+            bool success = _tagService.UpdateTag(tag);
+            if (!success)
+                return StatusCode(500, new { message = "Failed to update tag." });
+
+            return Ok(tag);
+        }
+
+        // === DELETE /api/tags/{id} ===
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            bool success = _tagService.DeleteTag(id);
+            if (!success)
+                return NotFound(new { message = "Tag not found or delete failed." });
+
+            return NoContent();
+        }
+
     }
+}
