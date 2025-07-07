@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Knowledge_Center.Models
+namespace Knowledge_Center_API.Models
 {
     public class KnowledgeNode
     {
