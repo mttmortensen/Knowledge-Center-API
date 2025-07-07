@@ -17,7 +17,7 @@ namespace Knowledge_Center_API.Controllers
             _logEntryService = lgService;
         }
 
-        // === GET /api/knowledgeNodes ===
+        // === GET /api/knowledge-nodes ===
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -25,7 +25,7 @@ namespace Knowledge_Center_API.Controllers
             return Ok(nodes);
         }
 
-        // === GET /api/knowledgeNodes/{id} ===
+        // === GET /api/knowledge-nodes/{id} ===
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -36,7 +36,7 @@ namespace Knowledge_Center_API.Controllers
             return Ok(node);
         }
 
-        // === POST /api/knowledgeNodes ===
+        // === POST /api/knowledge-nodes ===
         [HttpPost]
         public IActionResult Create([FromBody] KnowledgeNode node)
         {
@@ -49,7 +49,7 @@ namespace Knowledge_Center_API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = node.Id }, node);
         }
 
-        // === PUT /api/knowledgeNodes/{id} ===
+        // === PUT /api/knowledge-nodes/{id} ===
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] KnowledgeNode node)
         {
@@ -62,7 +62,7 @@ namespace Knowledge_Center_API.Controllers
             return Ok(node);
         }
 
-        // === DELETE /api/knowledgeNodes/{id} ===
+        // === DELETE /api/knowledge-nodes/{id} ===
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
