@@ -33,5 +33,18 @@ namespace Knowledge_Center_API.Controllers
 
             return Ok(log);
         }
+
+        // === POST /api/logs ===
+        [HttpPost]
+        public IActionResult Create([FromBody] LogEntry log)
+        {
+            log.EntryDate = DateTime.Now;
+
+            bool success = _logEntryService.CreateLogEntry(log);
+            if (!success)
+                return StatusCode(500, new { message = "Failed to create log entry." });
+
+            return CreatedAtAction(nameof(GetById), new { id = log.LogId }, log);
+        }
     }
 }
