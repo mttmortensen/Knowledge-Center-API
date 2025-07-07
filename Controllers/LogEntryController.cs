@@ -14,5 +14,24 @@ namespace Knowledge_Center_API.Controllers
         {
             _logEntryService = logEntryService;
         }
+
+        // === GET /api/logs ===
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            var logs = _logEntryService.GetAllLogEntries();
+            return Ok(logs);
+        }
+
+        // === GET /api/logs/{id} ===
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var log = _logEntryService.GetLogEntryByLogId(id);
+            if (log == null)
+                return NotFound(new { message = $"Log with ID {id} not found." });
+
+            return Ok(log);
+        }
     }
 }
