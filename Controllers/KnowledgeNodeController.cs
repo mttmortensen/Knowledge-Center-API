@@ -16,5 +16,25 @@ namespace Knowledge_Center_API.Controllers
             _knowledgeNodeService = knService;
             _logEntryService = lgService;
         }
+
+        // === GET /api/knowledgeNodes ===
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            var nodes = _knowledgeNodeService.GetAllNodes();
+            return Ok(nodes);
+        }
+
+        // === GET /api/knowledgeNodes/{id} ===
+        [HttpGet("{id}")]
+        public IActionResult GetById(int id)
+        {
+            var node = _knowledgeNodeService.GetNodeById(id);
+            if (node == null)
+                return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
+
+            return Ok(node);
+        }
+
     }
 }
