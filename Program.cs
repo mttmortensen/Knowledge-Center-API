@@ -1,4 +1,3 @@
-
 namespace Knowledge_Center_API
 {
     public class Program
@@ -7,25 +6,29 @@ namespace Knowledge_Center_API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // === Inject raw connection string into custom Database class ===
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddSingleton(new DataAccess.Database(connectionString));
 
+            // === Register your Services ===
+            builder.Services.AddScoped<Services.Core.KnowledgeNodeService>();
+            builder.Services.AddScoped<Services.Core.DomainService>();
+            builder.Services.AddScoped<Services.Core.LogEntryService>();
+
+            // === Add Controllers and Swagger ===
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // === Dev Swagger ===
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
 
             app.Run();
