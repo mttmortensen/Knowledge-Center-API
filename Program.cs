@@ -6,6 +6,12 @@ namespace Knowledge_Center_API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // === Custom Kestrel port ===
+            builder.WebHost.ConfigureKestrel((context, options) =>
+            {
+                options.Configure(context.Configuration.GetSection("Kestrel"));
+            });
+
             // === Inject raw connection string into custom Database class ===
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddSingleton(new DataAccess.Database(connectionString));
