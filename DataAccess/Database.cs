@@ -22,6 +22,12 @@ namespace Knowledge_Center_API.DataAccess
         {
             // Opens and returns a new SQL connection
             SqlConnection connection = new SqlConnection(_connectionString);
+
+
+            // For testing for the api hosting 
+            Console.WriteLine(_connectionString);
+
+
             connection.Open();
             return connection;
         }
