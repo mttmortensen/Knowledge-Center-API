@@ -28,7 +28,7 @@
             {
                 options.AddPolicy(name: KCFrontendCors, policy =>
                 {
-                    policy.WithOrigins("https://kc.mortensens.xyz")
+                    policy.WithOrigins("https://kc.mortensens.xyz", "http://localhost:8081")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
