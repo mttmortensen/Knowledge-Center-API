@@ -40,6 +40,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] Tags tag)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             bool success = _tagService.CreateTag(tag);
             if (!success)
                 return StatusCode(500, new { message = "Failed to create tag." });
@@ -51,6 +57,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] Tags tag)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             tag.TagId = id;
 
             bool success = _tagService.UpdateTag(tag);
@@ -64,6 +76,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             bool success = _tagService.DeleteTag(id);
             if (!success)
                 return NotFound(new { message = "Tag not found or delete failed." });

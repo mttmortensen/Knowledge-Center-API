@@ -42,6 +42,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] KnowledgeNode node)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             // (Optional) Auth & rate limit middleware would go here
 
             bool success = _knowledgeNodeService.CreateNode(node);
@@ -55,6 +61,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] KnowledgeNode node)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             node.Id = id;
 
             bool success = _knowledgeNodeService.UpdateNode(node);
@@ -68,6 +80,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             // Delete all logs associated with the node
             bool logsDeleted = _logEntryService.DeleteAllLogEntriesByNodeId(id);
             if (!logsDeleted)

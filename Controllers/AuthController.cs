@@ -9,8 +9,14 @@ namespace Knowledge_Center_API.Controllers
     public class AuthController : Controller
     {
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest loginData) 
-        {
+        public IActionResult Login([FromBody] LoginRequest loginData)
+        {    
+            // === Step 0: Rate limit check ===
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             try
             {
                 // === Step 1: Validate (sortof) login data

@@ -40,6 +40,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] LogEntry log)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             log.EntryDate = DateTime.Now;
 
             bool success = _logEntryService.CreateLogEntry(log);
