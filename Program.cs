@@ -35,7 +35,13 @@
             });
 
             // === Add Controllers and Swagger ===
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    // I don't want camel case
+                    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                });
+
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
