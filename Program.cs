@@ -1,4 +1,4 @@
-namespace Knowledge_Center_API
+﻿namespace Knowledge_Center_API
 {
     public class Program
     {
@@ -21,6 +21,18 @@ namespace Knowledge_Center_API
             builder.Services.AddScoped<Services.Core.DomainService>();
             builder.Services.AddScoped<Services.Core.LogEntryService>();
             builder.Services.AddScoped<Services.Core.TagService>();
+
+            // === Add CORS Policy ===
+            string KCFrontendCors = "KCFrontendCors";
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: KCFrontendCors, policy =>
+                {
+                    policy.WithOrigins("https://kc.mortensens.xyz")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
             // === Add Controllers and Swagger ===
             builder.Services.AddControllers();
