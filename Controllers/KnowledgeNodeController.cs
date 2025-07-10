@@ -42,19 +42,32 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] KnowledgeNode node)
         {
-            // Rate Limit Check
+            // === Step 0: Rate Limit Check ===
             if (!RateLimiter.IsAllowed(HttpContext))
             {
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            // (Optional) Auth & rate limit middleware would go here
+            try 
+            {
+                // === Step 1: Call service — it handles FieldValidator logic ===
+                bool success = _knowledgeNodeService.CreateNode(node);
+                if (!success)
+                    return StatusCode(500, new { message = "Failed to create node." });
 
-            bool success = _knowledgeNodeService.CreateNode(node);
-            if (!success)
-                return StatusCode(500, new { message = "Failed to create node." });
+                return CreatedAtAction(nameof(GetById), new { id = node.Id }, node);
+            }
+            catch(ArgumentException ex) 
+            {
+                // === Step 2: Catch validation failures cleanly ===
+                return BadRequest(new { message = ex.Message });
+            }
+            catch(Exception) 
+            {
+                return StatusCode(500, new { message = "An unexpected error occured" });
+            }
 
-            return CreatedAtAction(nameof(GetById), new { id = node.Id }, node);
+
         }
 
         // === PUT /api/knowledge-nodes/{id} ===
@@ -67,13 +80,26 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            node.Id = id;
+            try { 
+                node.Id = id;
 
-            bool success = _knowledgeNodeService.UpdateNode(node);
-            if (!success)
-                return StatusCode(500, new { message = "Node not found or update failed." });
+                // Call service — it handles FieldValidator logic
+                bool success = _knowledgeNodeService.UpdateNode(node);
+                if (!success)
+                    return StatusCode(500, new { message = "Node not found or update failed." });
 
-            return Ok(node);
+                return Ok(node);
+
+            }
+            catch(ArgumentException ex) 
+            {
+                // Catch validation failures cleanly
+                return BadRequest(new { message = ex.Message });
+            }
+            catch(Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured" });
+            }
         }
 
         // === DELETE /api/knowledge-nodes/{id} ===
