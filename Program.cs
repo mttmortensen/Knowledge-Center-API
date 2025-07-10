@@ -50,6 +50,7 @@
 
             // === Apply CORS before routing ===
             app.UseCors(KCFrontendCors);
+            app.UsePathBase("/kc");
 
             app.UseAuthorization();
             app.MapControllers();
