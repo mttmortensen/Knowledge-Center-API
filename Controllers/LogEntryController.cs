@@ -1,4 +1,5 @@
-﻿using Knowledge_Center_API.Models;
+﻿using Azure;
+using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -46,13 +47,26 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            log.EntryDate = DateTime.Now;
+            try
+            {
+                // === Step 1: Call service — it handles FieldValidator logic ===
+                log.EntryDate = DateTime.Now;
 
-            bool success = _logEntryService.CreateLogEntry(log);
-            if (!success)
-                return StatusCode(500, new { message = "Failed to create log entry." });
+                bool success = _logEntryService.CreateLogEntry(log);
+                if (!success)
+                    return StatusCode(500, new { message = "Failed to create log entry." });
 
-            return CreatedAtAction(nameof(GetById), new { id = log.LogId }, log);
+                return CreatedAtAction(nameof(GetById), new { id = log.LogId }, log);
+            }
+            catch (ArgumentException ex)
+            {
+                // === Step 2: Catch validation failures cleanly ===
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured" });
+            }
         }
     }
 }
