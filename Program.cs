@@ -47,6 +47,10 @@
             }
 
             app.UseHttpsRedirection();
+
+            // === Apply CORS before routing ===
+            app.UseCors(KCFrontendCors);
+
             app.UseAuthorization();
             app.MapControllers();
 
