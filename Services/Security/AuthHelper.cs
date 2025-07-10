@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Knowledge_Center_API.Models;
 
 namespace Knowledge_Center_API.Services.Security
 {
@@ -34,6 +37,23 @@ namespace Knowledge_Center_API.Services.Security
             }
 
             return true;
+        }
+
+        public static (string Username, string Password) LoadTestCredentials() 
+        {
+            string path = "test-auth.json";
+            if (!File.Exists(path)) 
+            {
+                throw new FileNotFoundException("Missing test-auth.json with test creds");
+            }
+
+            string json = File.ReadAllText(path);
+            LoginRequest creds = JsonSerializer.Deserialize<LoginRequest>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return (creds.Username, creds.Password);
         }
     }
 }
