@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Knowledge_Center_API.Services.Security
 {
@@ -31,14 +32,14 @@ namespace Knowledge_Center_API.Services.Security
         // Tracks requests per IP per route: Dictionary<"IP|routeKey">, List<Timestamps>>
         private static readonly Dictionary<string, List<DateTime>> RequestLog = new();
 
-        public static bool IsAllowed(HttpListenerRequest request)
+        public static bool IsAllowed(HttpContext context)
         {
-            string ip = request.RemoteEndPoint?.Address.ToString() ?? "unknown";
-            string routeKey = $"{request.HttpMethod}:{request.Url.AbsolutePath.ToLower()}";
+            string ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            string routeKey = $"{context.Request.Method}:{context.Request.Path.Value?.ToLower()}";
             string key = $"{ip}|{routeKey}";
 
             // default limit
-            int limit = LimitsPerRoute.ContainsKey(routeKey) ? LimitsPerRoute[routeKey] : 100;
+            int limit = LimitsPerRoute.TryGetValue(routeKey, out var val) ? val : 100;
 
             lock (RequestLog) 
             {
