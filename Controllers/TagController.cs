@@ -46,11 +46,24 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            bool success = _tagService.CreateTag(tag);
-            if (!success)
-                return StatusCode(500, new { message = "Failed to create tag." });
+            try
+            {
+                // === Step 1: Call service — it handles FieldValidator logic ===
+                bool success = _tagService.CreateTag(tag);
+                if (!success)
+                    return StatusCode(500, new { message = "Failed to create tag." });
 
-            return CreatedAtAction(nameof(GetById), new { id = tag.TagId }, tag);
+                return CreatedAtAction(nameof(GetById), new { id = tag.TagId }, tag);
+            }
+            catch (ArgumentException ex)
+            {
+                // === Step 2: Catch validation failures cleanly ===
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured" });
+            }
         }
 
         // === PUT /api/tags/{id} ===
@@ -63,13 +76,26 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            tag.TagId = id;
+            try
+            {
+                // === Step 1: Call service — it handles FieldValidator logic ===
+                tag.TagId = id;
 
-            bool success = _tagService.UpdateTag(tag);
-            if (!success)
-                return StatusCode(500, new { message = "Failed to update tag." });
+                bool success = _tagService.UpdateTag(tag);
+                if (!success)
+                    return StatusCode(500, new { message = "Failed to update tag." });
 
-            return Ok(tag);
+                return Ok(tag);
+            }
+            catch (ArgumentException ex)
+            {
+                // === Step 2: Catch validation failures cleanly ===
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occured" });
+            }
         }
 
         // === DELETE /api/tags/{id} ===
