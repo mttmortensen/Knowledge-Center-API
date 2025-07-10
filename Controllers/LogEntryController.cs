@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +40,7 @@ namespace Knowledge_Center_API.Controllers
 
         // === POST /api/logs ===
         [HttpPost]
-        public IActionResult Create([FromBody] LogEntry log)
+        public IActionResult Create([FromBody] LogEntryCreateDto log)
         {
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
@@ -52,11 +53,11 @@ namespace Knowledge_Center_API.Controllers
                 // === Step 1: Call service — it handles FieldValidator logic ===
                 log.EntryDate = DateTime.Now;
 
-                bool success = _logEntryService.CreateLogEntry(log);
+                bool success = _logEntryService.CreateLogEntryFromDto(log);
                 if (!success)
                     return StatusCode(500, new { message = "Failed to create log entry." });
 
-                return CreatedAtAction(nameof(GetById), new { id = log.LogId }, log);
+                return CreatedAtAction(nameof(GetById), new { id = log.Id }, log);
             }
             catch (ArgumentException ex)
             {
