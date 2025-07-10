@@ -1,4 +1,5 @@
 ﻿using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Validation;
 using Knowledge_Center_API.DataAccess;
 using Microsoft.Data.SqlClient;
@@ -24,6 +25,19 @@ namespace Knowledge_Center_API.Services.Core
         /* ===================== CRUD ===================== */
 
         // === CREATE ===
+        public bool CreateLogEntryFromDto(LogEntryCreateDto dto)
+        {
+            var log = new LogEntry
+            {
+                NodeId = dto.NodeId,
+                TagId = dto.TagId,
+                Content = dto.Content,
+                ContributesToProgress = dto.ContributesToProgress
+            };
+
+            return CreateLogEntry(log); // call the existing logic
+        }
+
         public bool CreateLogEntry(LogEntry log)
         {
             // Validate Input Fields 
