@@ -38,9 +38,13 @@ namespace Knowledge_Center_API.Controllers
 
         // === POST /api/domains ===
         [HttpPost]
-        public IActionResult Create([FromBody] Domain domain) 
-        {
-            // Later: Adding Auth and Rate Limiting middleware later
+        public IActionResult Create([FromBody] Domain domain)
+        { 
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
 
             bool success = _domainService.CreateDomain(domain);
             if (!success)
@@ -51,8 +55,14 @@ namespace Knowledge_Center_API.Controllers
 
         // === PUT /api/domains/{id} ===
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] Domain domain) 
-        {
+        public IActionResult Update(int id, [FromBody] Domain domain)
+        {            
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             domain.DomainId = id;
 
             bool success = _domainService.UpdateDomain(domain);
@@ -67,6 +77,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             bool success = _domainService.DeleteDomain(id);
             if (!success)
                 return StatusCode(500, new { message = "Domain not found or delete failed." });
