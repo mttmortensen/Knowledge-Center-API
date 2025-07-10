@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Services.Core;
+using Knowledge_Center_API.Services.Security;
 
 namespace Knowledge_Center_API.Controllers
 {
+    [RequireToken]
     [ApiController]
     [Route("api/tags")]
     public class TagController : ControllerBase

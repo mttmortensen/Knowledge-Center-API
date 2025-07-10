@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Services.Core;
+using Knowledge_Center_API.Services.Security;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Knowledge_Center_API.Controllers
 {
-
+    [RequireToken]
     [ApiController]
     [Route("api/domains")]
     public class DomainController : ControllerBase
