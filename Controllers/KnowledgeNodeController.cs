@@ -1,4 +1,5 @@
 ﻿using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -72,7 +73,7 @@ namespace Knowledge_Center_API.Controllers
 
         // === PUT /api/knowledge-nodes/{id} ===
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] KnowledgeNode node)
+        public IActionResult Update(int id, [FromBody] KnowledgeNodeUpdateDto node)
         {
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
@@ -84,7 +85,7 @@ namespace Knowledge_Center_API.Controllers
                 node.Id = id;
 
                 // Call service — it handles FieldValidator logic
-                bool success = _knowledgeNodeService.UpdateNode(node);
+                bool success = _knowledgeNodeService.UpdateNodeFromDto(node.Id, node);
                 if (!success)
                     return StatusCode(500, new { message = "Node not found or update failed." });
 
