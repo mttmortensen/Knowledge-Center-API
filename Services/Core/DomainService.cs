@@ -1,6 +1,7 @@
-﻿using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.DataAccess;
+using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Validation;
-using Knowledge_Center_API.DataAccess;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -92,6 +93,25 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === UPDATE ===
+
+        // This update method is what can allow to not have every field 
+        // updated. This will return the Dto for Domain which allows for the
+        // '?' fields
+        public bool UpdateDomainFromDto(int domainId, DomainUpdateDto dto)
+        {
+            var existing = GetDomainById(domainId);
+            if (existing == null)
+                return false;
+
+            // Only update fields that were sent
+            if (!string.IsNullOrWhiteSpace(dto.DomainName)) existing.DomainName = dto.DomainName;
+            if (!string.IsNullOrWhiteSpace(dto.DomainDescription)) existing.DomainDescription = dto.DomainDescription;
+            if (!string.IsNullOrWhiteSpace(dto.DomainStatus)) existing.DomainStatus = dto.DomainStatus;
+
+            existing.LastUpdated = DateTime.Now;
+
+            return UpdateDomain(existing);
+        }
         public bool UpdateDomain(Domain domain)
         {
             // Validating Field Inputs 
