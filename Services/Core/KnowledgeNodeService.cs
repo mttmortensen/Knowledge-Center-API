@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Knowledge_Center_API.DataAccess;
+using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Models.DTOs;
+using Knowledge_Center_API.Services.Validation;
+using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
-using Knowledge_Center_API.Models;
-using Knowledge_Center_API.Services.Validation;
-using Knowledge_Center_API.DataAccess;
-using System.Data;
 
 namespace Knowledge_Center_API.Services.Core
 {
@@ -96,6 +97,30 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === UPDATE ===
+
+        // This update method is what can allow to not have every field 
+        // updated. This will return the Dto for KN which allows for the
+        // '?' fields
+        public bool UpdateNodeFromDto(int nodeId, KnowledgeNodeUpdateDto dto)
+        {
+            var existing = GetNodeById(nodeId);
+            if (existing == null)
+                return false;
+
+            // Only update fields that were sent
+            if (!string.IsNullOrWhiteSpace(dto.Title)) existing.Title = dto.Title;
+            if (!string.IsNullOrWhiteSpace(dto.Description)) existing.Description = dto.Description;
+            if (!string.IsNullOrWhiteSpace(dto.Status)) existing.Status = dto.Status;
+            if (!string.IsNullOrWhiteSpace(dto.NodeType)) existing.NodeType = dto.NodeType;
+            if (dto.ConfidenceLevel.HasValue) existing.ConfidenceLevel = dto.ConfidenceLevel.Value;
+            if (dto.DomainId.HasValue) existing.DomainId = dto.DomainId.Value;
+
+            existing.LastUpdated = DateTime.Now;
+
+            return UpdateNode(existing);
+        }
+
+
         public bool UpdateNode(KnowledgeNode node)
         {
             // Validate Inputs Using Validators 
