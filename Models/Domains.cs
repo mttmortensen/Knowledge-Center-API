@@ -14,5 +14,6 @@ namespace Knowledge_Center_API.Models
         public string DomainStatus { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUsed { get; set; }
+        public DateTime LastUpdated { get; set; }
     }
 }
