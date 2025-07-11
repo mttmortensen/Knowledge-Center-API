@@ -25,6 +25,9 @@ namespace Knowledge_Center_API.Services.Core
         /* ===================== CRUD ===================== */
 
         // === CREATE ===
+
+        // This update method is what can allow to not have the 
+        // Tag value. Won't break the FieldValidator
         public bool CreateLogEntryFromDto(LogEntryCreateDto dto)
         {
             var log = new LogEntry
