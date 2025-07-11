@@ -1,4 +1,5 @@
 ﻿using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -69,7 +70,7 @@ namespace Knowledge_Center_API.Controllers
 
         // === PUT /api/domains/{id} ===
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] Domain domain)
+        public IActionResult Update(int id, [FromBody] DomainUpdateDto domain)
         {            
             // === Step 0: Rate Limit Check ===
             if (!RateLimiter.IsAllowed(HttpContext))
@@ -82,7 +83,7 @@ namespace Knowledge_Center_API.Controllers
                 // === Step 1: Call service — it handles FieldValidator logic ===
                 domain.DomainId = id;
 
-                bool success = _domainService.UpdateDomain(domain);
+                bool success = _domainService.UpdateDomainFromDto(domain.DomainId, domain);
                 if (!success)
                     return StatusCode(500, new { message = "Domain update failed. " });
 
