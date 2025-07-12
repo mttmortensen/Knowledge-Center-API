@@ -62,11 +62,21 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] KnowledgeNode node)
         {
-            // Demo mode: Creating is disabled
-            if (User.HasClaim("demo", "true"))
+            // Check for demo mode, return fake object if true
+            var demoResult = AuthHelper.HandleDemoCreate(User, () => new KnowledgeNode
             {
-                return Forbid("Write operations are disabled in demo mode.");
-            }
+                Id = 9999,
+                Title = node.Title,
+                DomainId = node.DomainId,
+                NodeType = node.NodeType,
+                Description = node.Description,
+                ConfidenceLevel = node.ConfidenceLevel,
+                Status = node.Status,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            if (demoResult != null)
+                return demoResult;
 
             // === Step 0: Rate Limit Check ===
             if (!RateLimiter.IsAllowed(HttpContext))

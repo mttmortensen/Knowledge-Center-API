@@ -59,11 +59,15 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] Tags tag)
         {
-            // Demo mode: Creating is disabled
-            if (User.HasClaim("demo", "true"))
+            // Check for demo mode, return fake object if true
+            var demoResult = AuthHelper.HandleDemoCreate(User, () => new Tags
             {
-                return Forbid("Write operations are disabled in demo mode.");
-            }
+                TagId = tag.TagId,
+                Name = tag.Name
+            });
+
+            if (demoResult != null)
+                return demoResult;
 
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))

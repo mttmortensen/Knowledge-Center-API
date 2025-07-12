@@ -62,11 +62,18 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] Domain domain)
         {
-            // Demo mode: Creating is disabled
-            if (User.HasClaim("demo", "true"))
+            // Check for demo mode, return fake object if true
+            var demoResult = AuthHelper.HandleDemoCreate(User, () => new Domain
             {
-                return Forbid("Write operations are disabled in demo mode.");
-            }
+                DomainId = domain.DomainId,
+                DomainName = domain.DomainName,
+                DomainDescription = domain.DomainDescription,
+                DomainStatus = domain.DomainStatus,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            if (demoResult != null)
+                return demoResult;
 
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
