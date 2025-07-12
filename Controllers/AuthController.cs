@@ -59,7 +59,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            return Ok();
+            // Step 1: Get the Authorization header from the request
+            // Step 2: Check if the header is missing or doesn't start with "Bearer "
+            // Step 3: Extract the token from the header
+            // Step 4: Find the username associated with this token
+            // Step 5: If the token is valid and a username is found, end the session
+            // If no matching session found, return unauthorized
         }
 
         [HttpPost("demo")]
