@@ -1,4 +1,8 @@
-﻿namespace Knowledge_Center_API
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+namespace Knowledge_Center_API
 {
     public class Program
     {
@@ -35,6 +39,25 @@
                 });
             });
 
+            // === JWT Authentication Setup for Demo Mode ===
+            var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+            if (string.IsNullOrEmpty(jwtSecret))
+            {
+                throw new Exception("JWT_SECRET environment variable is not set.");
+            }
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
             // === Add Controllers and Swagger ===
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -59,6 +82,7 @@
             app.UseCors(KCFrontendCors);
             app.UsePathBase("/kc");
 
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 
