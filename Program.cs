@@ -35,7 +35,8 @@ namespace Knowledge_Center_API
                 {
                     policy.WithOrigins("https://kc.mortensens.xyz", "http://localhost:8081", "http://localhost:3000")
                           .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          .AllowAnyMethod()
+                          .AllowCredentials();
                 });
             });
 
