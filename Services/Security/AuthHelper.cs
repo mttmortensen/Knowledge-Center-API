@@ -40,9 +40,9 @@ namespace Knowledge_Center_API.Services.Security
                 // Define claims: a unique ID and a custom "demo" flag to mark this as a demo user
                 Subject = new ClaimsIdentity(new[]
                 {
-            new Claim(ClaimTypes.NameIdentifier, "demo-user"), // identifies the user
-            new Claim("demo", "true") // custom claim to flag this as a demo session
-        }),
+                    new Claim(ClaimTypes.NameIdentifier, "demo-user"), // identifies the user
+                    new Claim("demo", "true") // custom claim to flag this as a demo session
+                }),
 
                 // Set token to expire in 30 minutes
                 Expires = DateTime.UtcNow.AddMinutes(30),
