@@ -14,12 +14,12 @@ namespace Knowledge_Center_API.Controllers
 
         public AuthController(UserService userService)
         {
-            _userService = userService;            
+            _userService = userService;
         }
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest loginData)
-        {    
+        {
             // === Step 0: Rate limit check ===
             if (!RateLimiter.IsAllowed(HttpContext))
             {
@@ -57,9 +57,32 @@ namespace Knowledge_Center_API.Controllers
         }
 
         [HttpPost("logout")]
-        public IActionResult Logout() 
+        public IActionResult Logout()
         {
             return Ok();
+        }
+
+        [HttpPost("demo")]
+        public IActionResult DemoLogin() 
+        {
+            // === Step 0: Rate limit to prevent abuse ===
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try 
+            {
+                // === Step 1: Get the JWT secret from environment variables ===
+                // === Step 2: Fail safely if not set ===
+                // === Step 3: Generate a temporary JWT token for the demo user ===
+                // === Step 4: Return the token to the frontend ===
+
+            }
+            catch 
+            {
+                // === Catch all ===
+            }
         }
     }
 }
