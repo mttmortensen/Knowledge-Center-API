@@ -60,11 +60,27 @@ namespace Knowledge_Center_API.Controllers
         public IActionResult Logout()
         {
             // Step 1: Get the Authorization header from the request
+            string authHeader = Request.Headers["Authorization"].ToString();
+
             // Step 2: Check if the header is missing or doesn't start with "Bearer "
+            if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+                return Unauthorized(new { message = "Missing or invalid Authorization Header. " });
+
             // Step 3: Extract the token from the header
+            string token = authHeader.Substring("Bearer ".Length);
+
             // Step 4: Find the username associated with this token
+            string username = AuthSession.GetUsernameByToken(token);
+
             // Step 5: If the token is valid and a username is found, end the session
+            if(username != null) 
+            {
+                AuthSession.EndSession(username);
+                return Ok(new { message = "Logout Successfull. " });
+            }
+
             // If no matching session found, return unauthorized
+            return Unauthorized(new { messsage = "Invalid Token. " });
         }
 
         [HttpPost("demo")]
