@@ -1,16 +1,17 @@
-﻿using System;
+﻿using BCrypt.Net;
+using Knowledge_Center_API.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
-using Knowledge_Center_API.Models;
-using BCrypt.Net;
 
 namespace Knowledge_Center_API.Services.Security
 {
@@ -58,6 +59,18 @@ namespace Knowledge_Center_API.Services.Security
 
             // Convert the token into a string to return to the frontend
             return tokenHandler.WriteToken(token);
+        }
+
+        // Simulating a fake create result in demo mode
+        public static IActionResult HandleDemoCreate<T>(ClaimsPrincipal user, Func<T> fakeObjectFactory)
+        {
+            if (user.HasClaim("demo", "true"))
+            {
+                var fakeResult = fakeObjectFactory();
+                return new OkObjectResult(fakeResult);
+            }
+
+            return null; // Caller must continue with real logic
         }
     }
 }
