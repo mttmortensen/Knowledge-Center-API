@@ -1,6 +1,8 @@
 ﻿using Knowledge_Center_API.Models;
+using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace Knowledge_Center_API.Controllers
 {
@@ -8,6 +10,13 @@ namespace Knowledge_Center_API.Controllers
     [Route("api/auth")]
     public class AuthController : Controller
     {
+        private readonly UserService _userService;
+
+        public AuthController(UserService userService)
+        {
+            _userService = userService;            
+        }
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest loginData)
         {    
@@ -19,29 +28,31 @@ namespace Knowledge_Center_API.Controllers
 
             try
             {
-                // === Step 1: Validate (sortof) login data
-                if (loginData == null || string.IsNullOrWhiteSpace(loginData.Username) || string.IsNullOrWhiteSpace(loginData.Password))
+                // === Step 1: Null check on loginData itself ===
+                if (loginData == null)
                 {
-                    return BadRequest(new { message = "Missing Creds" });
+                    return BadRequest(new { message = "Missing login data." });
                 }
 
-                // === Step 2: Authenticate
-                // This avoids hard coded creds
-                var (expectedUsername, expectedPassword) = AuthHelper.LoadTestCredentials();
+                // === Step 2: Authenticate ===
+                var user = _userService.AuthenticateUser(loginData.Username, loginData.Password);
 
-                if (loginData.Username == expectedUsername && loginData.Password == expectedPassword) 
+                if (!user.IsAuthenticated)
                 {
-                    string token = AuthSession.CreateSession(expectedUsername);
-                    return Ok(new { token });
+                    return BadRequest(new { message = "Invalid username or password." });
                 }
-                else 
-                {
-                    return BadRequest(new { message = "Invalid Creds" });
-                }
+
+                // === Step 3: Return Token ===
+                return Ok(new { token = user.Token });
+
             }
-            catch 
+            catch (ValidationException ex)
             {
-                return StatusCode(500, new { messsage = "Login Request Failed." });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch
+            {
+                return StatusCode(500, new { message = "Login request failed." });
             }
         }
 
