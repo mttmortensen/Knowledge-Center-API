@@ -21,6 +21,7 @@
             builder.Services.AddScoped<Services.Core.DomainService>();
             builder.Services.AddScoped<Services.Core.LogEntryService>();
             builder.Services.AddScoped<Services.Core.TagService>();
+            builder.Services.AddScoped<Services.Core.UserService>();
 
             // === Add CORS Policy ===
             string KCFrontendCors = "KCFrontendCors";
