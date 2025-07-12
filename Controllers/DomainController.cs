@@ -1,4 +1,5 @@
-﻿using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.DataAccess.Demo;
+using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
@@ -23,6 +24,14 @@ namespace Knowledge_Center_API.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
+            // Demo mode: Read-only
+            if (User.HasClaim("demo", "true"))
+            {
+                // Use in-memory demo data
+                return Ok(DemoData.Domains);
+            }
+
+
             var domains = _domainService.GetAllDomains();
             return Ok(domains);
         }
@@ -31,6 +40,17 @@ namespace Knowledge_Center_API.Controllers
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
+            // Demo mode: Read-only
+            if (User.HasClaim("demo", "true"))
+            {
+                Domain demoDomain = DemoData.Domains.FirstOrDefault(d => d.DomainId == id);
+
+                if (demoDomain == null)
+                    return NotFound($"Demo domain with ID {id} not found");
+
+                return Ok(demoDomain);
+            }
+
             var domain = _domainService.GetDomainById(id);
             if (domain == null)
                 return NotFound(new { message = $"Domain with ID {id} not found." });
@@ -41,7 +61,13 @@ namespace Knowledge_Center_API.Controllers
         // === POST /api/domains ===
         [HttpPost]
         public IActionResult Create([FromBody] Domain domain)
-        { 
+        {
+            // Demo mode: Creating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Write operations are disabled in demo mode.");
+            }
+
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
             {
@@ -71,7 +97,13 @@ namespace Knowledge_Center_API.Controllers
         // === PUT /api/domains/{id} ===
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] DomainUpdateDto domain)
-        {            
+        {
+            // Demo mode: Updating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Write operations are disabled in demo mode.");
+            }
+
             // === Step 0: Rate Limit Check ===
             if (!RateLimiter.IsAllowed(HttpContext))
             {
@@ -105,6 +137,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            // Demo mode: Deleting is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Write operations are disabled in demo mode.");
+            }
+
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
             {
