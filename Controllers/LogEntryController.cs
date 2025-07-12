@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Azure.Core;
 using Knowledge_Center_API.DataAccess.Demo;
 using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Models.DTOs;
@@ -61,11 +62,17 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] LogEntryCreateDto log)
         {
-            // Demo mode: Creating is disabled
-            if (User.HasClaim("demo", "true"))
+            // Check for demo mode, return fake object if true
+            var demoResult = AuthHelper.HandleDemoCreate(User, () => new LogEntry
             {
-                return Forbid("Write operations are disabled in demo mode.");
-            }
+                LogId = 9999,
+                NodeId = log.NodeId,
+                Content = log.Content,
+                EntryDate = DateTime.UtcNow
+            });
+
+            if (demoResult != null)
+                return demoResult;
 
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
