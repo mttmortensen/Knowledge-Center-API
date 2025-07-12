@@ -74,14 +74,27 @@ namespace Knowledge_Center_API.Controllers
             try 
             {
                 // === Step 1: Get the JWT secret from environment variables ===
+                var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+
                 // === Step 2: Fail safely if not set ===
+                if (string.IsNullOrWhiteSpace(jwtSecret))
+                    return StatusCode(500, new { message = "Server misconfigured. JWT Secret missing." });
+
                 // === Step 3: Generate a temporary JWT token for the demo user ===
+                var demoToken = AuthHelper.GenerateDemoToken(jwtSecret);
+
                 // === Step 4: Return the token to the frontend ===
+                return Ok(new 
+                {
+                    token = demoToken,
+                    isDemo = true
+                });
 
             }
             catch 
             {
                 // === Catch all ===
+                return StatusCode(500, new { message = "Demo login failed. " });
             }
         }
     }
