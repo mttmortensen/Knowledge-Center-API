@@ -46,7 +46,7 @@ namespace Knowledge_Center_API.Controllers
                 Domain demoDomain = DemoData.Domains.FirstOrDefault(d => d.DomainId == id);
 
                 if (demoDomain == null)
-                    return NotFound($"Demo domain with ID {id} not found");
+                    return NotFound($"Demo domain with ID {id} is not found");
 
                 return Ok(demoDomain);
             }
@@ -101,7 +101,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Updating is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Write operations are disabled in demo mode.");
+                return Forbid("Update operations are disabled in demo mode.");
             }
 
             // === Step 0: Rate Limit Check ===
@@ -140,7 +140,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Deleting is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Write operations are disabled in demo mode.");
+                return Forbid("Deleting operations are disabled in demo mode.");
             }
 
             // Rate Limit Check

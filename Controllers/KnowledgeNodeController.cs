@@ -1,4 +1,5 @@
-﻿using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.DataAccess.Demo;
+using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
@@ -24,6 +25,13 @@ namespace Knowledge_Center_API.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
+            // Demo mode: Read-only
+            if (User.HasClaim("demo", "true"))
+            {
+                // Use in-memory demo data
+                return Ok(DemoData.KnowledgeNodes);
+            }
+
             var nodes = _knowledgeNodeService.GetAllNodes();
             return Ok(nodes);
         }
@@ -32,6 +40,17 @@ namespace Knowledge_Center_API.Controllers
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
+            // Demo mode: Read-only
+            if (User.HasClaim("demo", "true"))
+            {
+                KnowledgeNode demoKN = DemoData.KnowledgeNodes.FirstOrDefault(kn => kn.Id == id);
+
+                if (demoKN == null)
+                    return NotFound($"Demo Knowledge Node with ID {id} is not found");
+
+                return Ok(demoKN);
+            }
+
             var node = _knowledgeNodeService.GetNodeById(id);
             if (node == null)
                 return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
@@ -43,6 +62,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] KnowledgeNode node)
         {
+            // Demo mode: Creating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Write operations are disabled in demo mode.");
+            }
+
             // === Step 0: Rate Limit Check ===
             if (!RateLimiter.IsAllowed(HttpContext))
             {
@@ -75,6 +100,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] KnowledgeNodeUpdateDto node)
         {
+            // Demo mode: Updating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Update operations are disabled in demo mode.");
+            }
+
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
             {
@@ -107,6 +138,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            // Demo mode: Deleting is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Deleting operations are disabled in demo mode.");
+            }
+
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
             {

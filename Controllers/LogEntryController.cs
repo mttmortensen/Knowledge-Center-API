@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Knowledge_Center_API.DataAccess.Demo;
 using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
@@ -23,6 +24,13 @@ namespace Knowledge_Center_API.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
+            // Demo mode: Read-only
+            if (User.HasClaim("demo", "true"))
+            {
+                // Use in-memory demo data
+                return Ok(DemoData.LogEntries);
+            }
+
             var logs = _logEntryService.GetAllLogEntries();
             return Ok(logs);
         }
@@ -31,6 +39,17 @@ namespace Knowledge_Center_API.Controllers
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
+            // Demo mode: Read-only
+            if (User.HasClaim("demo", "true"))
+            {
+                LogEntry demoLog = DemoData.LogEntries.FirstOrDefault(lg => lg.LogId == id);
+
+                if (demoLog == null)
+                    return NotFound($"Demo Log Entry with ID {id} is not found");
+
+                return Ok(demoLog);
+            }
+
             var log = _logEntryService.GetLogEntryByLogId(id);
             if (log == null)
                 return NotFound(new { message = $"Log with ID {id} not found." });
@@ -42,6 +61,12 @@ namespace Knowledge_Center_API.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] LogEntryCreateDto log)
         {
+            // Demo mode: Creating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Write operations are disabled in demo mode.");
+            }
+
             // Rate Limit Check
             if (!RateLimiter.IsAllowed(HttpContext))
             {
