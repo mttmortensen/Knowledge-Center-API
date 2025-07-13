@@ -24,7 +24,7 @@ namespace Knowledge_Center_API.Services.Core
         /* ===================== CRUD ===================== */
 
         // === CREATE ===
-        public bool CreateNode(KnowledgeNode node)
+        public bool CreateKnowledgeNode(KnowledgeNode node)
         {
             // Validate Inputs Using Validators 
             FieldValidator.ValidateRequiredString(node.Title, "Title", 100);
@@ -60,7 +60,7 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === READ ===
-        public List<KnowledgeNode> GetAllNodes()
+        public List<KnowledgeNode> GetAllKnolwedgeNodes()
         {
             // SELECT Query + Parameters to retrieve all KnowledgeNodes and map results into KnowledgeNode objects
             List<KnowledgeNode> nodes = new List<KnowledgeNode>();
@@ -69,18 +69,18 @@ namespace Knowledge_Center_API.Services.Core
 
             foreach (var rawDBRow in rawDBResults)
             {
-                nodes.Add(ConvertDBRowToClassObj(rawDBRow));
+                nodes.Add(ConvertDBRowToKNBaseObj(rawDBRow));
             }
 
             return nodes;
         }
 
-        public KnowledgeNode GetNodeById(int id)
+        public KnowledgeNodeWithLogsDto GetKnowledgeNodeWithLogsById(int id)
         {
             // Validate Inputs Using Validators 
             FieldValidator.ValidateId(id, "KnowledgeNode ID");
 
-            // SELECT Query + Parameters to retrieve a specific KnowledgeNode by ID and map result into a KnowledgeNode object
+            // Fetch Raw KN Data
             List<SqlParameter> parameters = new List<SqlParameter>
             {
                 new SqlParameter("@Id", id )
@@ -93,7 +93,50 @@ namespace Knowledge_Center_API.Services.Core
                 return null; // No node found with the given ID
             }
 
-            return ConvertDBRowToClassObj(rawDBResults[0]);
+            // Convert it into the KNwLogs Dto which we'll return 
+            // but first need to fetch logs and add them to this dto
+            KnowledgeNodeWithLogsDto nodeDto = ConvertDBRowToKNWithLogsDto(rawDBResults[0]);
+
+            // Fetch Logs
+            List<LogEntry> logs = GetLogsForKnowledgeNode(id);
+            // Adding Logs to Dto
+            nodeDto.Logs = logs.Select(log => new LogEntryInlineDto 
+            {
+                LogId = log.LogId,
+                Content = log.Content,
+                EntryDate = log.EntryDate,
+                ContributesToProgress = log.ContributesToProgress
+
+            })
+            .ToList();
+
+            return nodeDto;
+        }
+
+        /*
+         * Retrieves all log entries associated with a specific Knowledge Node by its Id
+         * and maps the result rows to LogEntry objects, and returns them as a list. 
+         * For LogEntryInline to include essential fields; excludes unrelated data like tags.
+         */
+
+        private List<LogEntry> GetLogsForKnowledgeNode(int nodeId)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>
+            {
+                new SqlParameter("@NodeId", nodeId)
+            };
+
+            var rawResults = _database.ExecuteQuery(LogEntryQueries.GetLogsByNodeId, parameters);
+
+            return rawResults.Select(row => new LogEntry
+            {
+                LogId = Convert.ToInt32(row["LogId"]),
+                NodeId = Convert.ToInt32(row["NodeId"]),
+                EntryDate = Convert.ToDateTime(row["EntryDate"]),
+                Content = row["Content"].ToString(),
+                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"])
+            })
+            .ToList();
         }
 
         // === UPDATE ===
@@ -101,27 +144,40 @@ namespace Knowledge_Center_API.Services.Core
         // This update method is what can allow to not have every field 
         // updated. This will return the Dto for KN which allows for the
         // '?' fields
-        public bool UpdateNodeFromDto(int nodeId, KnowledgeNodeUpdateDto dto)
+        public bool UpdateKnowledgeNodeFromDto(int nodeId, KnowledgeNodeUpdateDto dto)
         {
-            var existing = GetNodeById(nodeId);
-            if (existing == null)
+            KnowledgeNodeWithLogsDto existingKNDto = GetKnowledgeNodeWithLogsById(nodeId);
+            if (existingKNDto == null)
                 return false;
 
             // Only update fields that were sent
-            if (!string.IsNullOrWhiteSpace(dto.Title)) existing.Title = dto.Title;
-            if (!string.IsNullOrWhiteSpace(dto.Description)) existing.Description = dto.Description;
-            if (!string.IsNullOrWhiteSpace(dto.Status)) existing.Status = dto.Status;
-            if (!string.IsNullOrWhiteSpace(dto.NodeType)) existing.NodeType = dto.NodeType;
-            if (dto.ConfidenceLevel.HasValue) existing.ConfidenceLevel = dto.ConfidenceLevel.Value;
-            if (dto.DomainId.HasValue) existing.DomainId = dto.DomainId.Value;
+            if (!string.IsNullOrWhiteSpace(dto.Title)) existingKNDto.Title = dto.Title;
+            if (!string.IsNullOrWhiteSpace(dto.Description)) existingKNDto.Description = dto.Description;
+            if (!string.IsNullOrWhiteSpace(dto.Status)) existingKNDto.Status = dto.Status;
+            if (!string.IsNullOrWhiteSpace(dto.NodeType)) existingKNDto.NodeType = dto.NodeType;
+            if (dto.ConfidenceLevel.HasValue) existingKNDto.ConfidenceLevel = dto.ConfidenceLevel.Value;
+            if (dto.DomainId.HasValue) existingKNDto.DomainId = dto.DomainId.Value;
 
-            existing.LastUpdated = DateTime.Now;
+            existingKNDto.LastUpdated = DateTime.Now;
 
-            return UpdateNode(existing);
+
+            // Manually map to base model before passing to UpdateKnowledgeNode
+            KnowledgeNode node = new KnowledgeNode
+            {
+                Id = existingKNDto.Id,
+                Title = existingKNDto.Title,
+                DomainId = existingKNDto.DomainId,
+                NodeType = existingKNDto.NodeType,
+                Description = existingKNDto.Description,
+                ConfidenceLevel = existingKNDto.ConfidenceLevel,
+                Status = existingKNDto.Status,
+                LastUpdated = existingKNDto.LastUpdated
+            };
+
+            return UpdateKnowledgeNode(node);
         }
 
-
-        public bool UpdateNode(KnowledgeNode node)
+        private bool UpdateKnowledgeNode(KnowledgeNode node)
         {
             // Validate Inputs Using Validators 
             FieldValidator.ValidateRequiredString(node.Title, "Title", 100);
@@ -130,8 +186,7 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateEnumValue(node.NodeType, "NodeType", new() { "Concept", "Project" });
             FieldValidator.ValidateEnumValue(node.Status, "Status", new() { "Exploring", "Learning", "Mastered" });
 
-
-            // UPDATE Query + Parameters to update an existing KnowledgeNode by it's ID
+            // UPDATE Query + Parameters to update an existingKNDto KnowledgeNode by it's ID
             node.LastUpdated = DateTime.Now;
 
             // === Strictly Typed SQL Parameters ===
@@ -154,7 +209,7 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === DELETE ===
-        public bool DeleteNode(int id)
+        public bool DeleteKnowledgeNode(int id)
         {
             // Validate Inputs Using Validators 
             FieldValidator.ValidateId(id, "KnowledgeNode ID");
@@ -173,7 +228,7 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
-        private KnowledgeNode ConvertDBRowToClassObj(Dictionary<string, object> rawDBRow)
+        private KnowledgeNode ConvertDBRowToKNBaseObj(Dictionary<string, object> rawDBRow)
         {
             return new KnowledgeNode
             {
@@ -186,6 +241,23 @@ namespace Knowledge_Center_API.Services.Core
                 Status = rawDBRow["Status"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"])
+            };
+        }
+
+        private KnowledgeNodeWithLogsDto ConvertDBRowToKNWithLogsDto(Dictionary<string, object> rawDBRow) 
+        {
+            return new KnowledgeNodeWithLogsDto
+            {
+                Id = Convert.ToInt32(rawDBRow["Id"]),
+                Title = rawDBRow["Title"].ToString(),
+                DomainId = Convert.ToInt32(rawDBRow["DomainId"]),
+                NodeType = rawDBRow["NodeType"].ToString(),
+                Description = rawDBRow["Description"].ToString(),
+                ConfidenceLevel = Convert.ToInt32(rawDBRow["ConfidenceLevel"]),
+                Status = rawDBRow["Status"].ToString(),
+                CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
+                LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"]),
+                Logs = new List<LogEntryInlineDto>()
             };
         }
     }
