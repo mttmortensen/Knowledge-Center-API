@@ -27,6 +27,22 @@ namespace Knowledge_Center_API.DataAccess
             ORDER BY EntryDate DESC;
         ";
 
+        public static readonly string GetAllLogsWithTags = @"
+            SELECT 
+                l.LogId,
+                l.NodeId,
+                l.EntryDate,
+                l.Content,
+                l.ContributesToProgress,
+                l.TagId,
+                t.Name AS TagName
+            FROM 
+                LogEntries l
+            LEFT JOIN 
+                Tags t ON l.TagId = t.TagId;
+        ";
+
+
         public static readonly string GetLogByLogId = @"
             SELECT * FROM LogEntries 
             WHERE LogId = @LogId;
