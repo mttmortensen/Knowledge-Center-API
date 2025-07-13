@@ -91,36 +91,7 @@ namespace Knowledge_Center_API.Services.Core
 
             return logEntries;
         }
-        public List<LogEntry> GetAllLogEntriesByNodeId(int nodeId)
-        {
-            // Validate Input Fields 
-            FieldValidator.ValidateId(nodeId, "KnowledgeNode ID");
 
-            List<SqlParameter> parameters = new List<SqlParameter>
-            {
-                new SqlParameter("@NodeId", SqlDbType.Int) { Value = nodeId }
-            };
-
-            // SELECT Query + Parameters to retrieve all LogEntries from a specific Knowledge Node and maps results into LogEntry objects
-
-            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetLogsByNodeId, parameters);
-
-            if (rawDBResults.Count == 0)
-            {
-                return null;
-            }
-
-            List<LogEntry> logEntries = new List<LogEntry>();
-
-            foreach (var rawDBRow in rawDBResults)
-            {
-                logEntries.Add(ConvertDBRowToClassObj(rawDBRow));
-            }
-
-            return logEntries;
-        }
-
-        // This function is being used in the API
         public LogEntry GetLogEntryByLogId(int logId)
         {
             // Validate Input Fields 
