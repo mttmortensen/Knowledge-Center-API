@@ -1,5 +1,12 @@
 ﻿namespace Knowledge_Center_API.Models.DTOs
 {
+    /* 
+     * GET /api/knowledge-nodes/{id}
+     * 
+     * A KN has many logs, that is my design of this entity. 
+     * So to translate that, I added the LogEntryInline Dto 
+     * To this new KN Dto. 
+     */
     public class KnowledgeNodeWithLogsDto
     {
         public int Id { get; set; }
