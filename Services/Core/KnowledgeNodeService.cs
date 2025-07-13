@@ -65,7 +65,7 @@ namespace Knowledge_Center_API.Services.Core
             // SELECT Query + Parameters to retrieve all KnowledgeNodes and map results into KnowledgeNode objects
             List<KnowledgeNode> nodes = new List<KnowledgeNode>();
 
-            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.SelectAllNodes, null);
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetAllKnowledgeNodes, null);
 
             foreach (var rawDBRow in rawDBResults)
             {
@@ -86,7 +86,7 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@Id", id )
             };
 
-            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.SelectNodeById, parameters);
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, parameters);
 
             if (rawDBResults.Count == 0)
             {
@@ -202,7 +202,7 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@LastUpdated", SqlDbType.DateTime) { Value = node.LastUpdated }
             };
 
-            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.UpdateNode, parameters);
+            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.UpdateKnowledgeNode, parameters);
 
             // Return true to see if UPDATE was successful
             return result > 0;
@@ -221,7 +221,7 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@Id", id)
             };
 
-            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.DeleteNode, parameters);
+            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.DeleteKnowledgeNode, parameters);
 
             // Return true to see if DELETE was successful
             return result > 0;

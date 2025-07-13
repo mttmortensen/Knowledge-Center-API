@@ -15,16 +15,22 @@ namespace Knowledge_Center_API.DataAccess
                     (@Title, @DomainId, @NodeType, @Description, @ConfidenceLevel, @Status, @CreatedAt, @LastUpdated);
         ";
 
-        public static readonly string SelectAllNodes = @"
+        public static readonly string GetAllKnowledgeNodes = @"
             SELECT * FROM KnowledgeNodes;
         ";
 
-        public static readonly string SelectNodeById = @"
+        public static readonly string GetKnowledgeNodesByDomainId = @"
+            SELECT * FROM KnowledgeNodes
+            WHERE DomainId = @DomainId
+            ORDER BY LastUpdated DESC;
+        ";
+
+        public static readonly string GetKnowledgeNodeById = @"
             SELECT * FROM KnowledgeNodes 
             WHERE Id = @Id;
         ";
 
-        public static readonly string UpdateNode = @"
+        public static readonly string UpdateKnowledgeNode = @"
             UPDATE KnowledgeNodes 
             SET Title = @Title, 
                 DomainId = @DomainId, 
@@ -36,7 +42,7 @@ namespace Knowledge_Center_API.DataAccess
             WHERE Id = @Id;
         ";
 
-        public static readonly string DeleteNode = @"
+        public static readonly string DeleteKnowledgeNode = @"
             DELETE FROM KnowledgeNodes 
             WHERE Id = @Id;
         ";  
