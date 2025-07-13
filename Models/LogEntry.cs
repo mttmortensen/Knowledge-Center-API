@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Knowledge_Center_API.Models
+﻿namespace Knowledge_Center_API.Models
 {
     public class LogEntry
     {
