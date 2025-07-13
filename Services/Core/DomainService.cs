@@ -88,7 +88,7 @@ namespace Knowledge_Center_API.Services.Core
 
             List<KnowledgeNode> nodes = GetKnowledgeNodesForDomain(id);
 
-            domainDto.KnowledgNodes = nodes.Select(node => new KnowledgeNodeInlineDto
+            domainDto.KnowledgeNodes = nodes.Select(node => new KnowledgeNodeInlineDto
             {
                 Id = node.Id,
                 Title = node.Title,
@@ -242,7 +242,7 @@ namespace Knowledge_Center_API.Services.Core
                 DomainStatus = rawDBRow["DomainStatus"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"]),
-                KnowledgNodes = new List<KnowledgeNodeInlineDto>()
+                KnowledgeNodes = new List<KnowledgeNodeInlineDto>()
             };
         }
     }

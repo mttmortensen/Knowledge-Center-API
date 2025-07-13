@@ -9,6 +9,6 @@
         public DateTime CreatedAt { get; set; }
         public DateTime LastUsed { get; set; }
         public DateTime LastUpdated { get; set; }
-        public List<KnowledgeNodeInlineDto> KnowledgNodes { get; set; }
+        public List<KnowledgeNodeInlineDto> KnowledgeNodes { get; set; }
     }
 }
