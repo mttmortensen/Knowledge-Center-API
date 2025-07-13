@@ -1,14 +1,9 @@
-﻿using Azure;
-using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.Models;
 using Knowledge_Center_API.DataAccess;
 using Knowledge_Center_API.Services.Validation;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Knowledge_Center_API.Services.Core
 {
