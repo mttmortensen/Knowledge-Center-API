@@ -61,10 +61,71 @@ namespace Knowledge_Center_API.Services.Core
 
             foreach (var rawDBRow in rawDBResults)
             {
-                domains.Add(ConvertDBRowToClassObj(rawDBRow));
+                domains.Add(ConvertDBRowToDomainBaseObj(rawDBRow));
             }
 
             return domains;
+        }
+
+        public DomainWithKNsDto GetDomainByIdWithKNs(int id) 
+        {
+            FieldValidator.ValidateId(id, "Domain ID");
+
+            List<SqlParameter> parameters = new List<SqlParameter>
+            {
+                new SqlParameter("@DomainId", id)
+            };
+
+            var rawDBResults = _database.ExecuteQuery(DomainQueries.GetDomainById, parameters);
+
+
+            if (rawDBResults.Count == 0)
+            {
+                return null; // No domain found with the given ID
+            }
+
+            DomainWithKNsDto domainDto = ConvertDBRowToDomainWithKNsObj(rawDBResults[0]);
+
+            List<KnowledgeNode> nodes = GetKnowledgeNodesForDomain(id);
+
+            domainDto.KnowledgNodes = nodes.Select(node => new KnowledgeNodeInlineDto
+            {
+                Id = node.Id,
+                Title = node.Title,
+                NodeType = node.NodeType,
+                ConfidenceLevel = node.ConfidenceLevel,
+                Status = node.Status,
+                CreatedAt = node.CreatedAt,
+                LastUpdated = node.LastUpdated
+            })
+            .ToList();
+
+            return domainDto;
+        }
+
+        private List<KnowledgeNode> GetKnowledgeNodesForDomain(int domainId)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>
+            {
+                new SqlParameter("@DomainId", domainId)
+            };
+
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodesByDomainId, parameters);
+
+            return rawDBResults.Select(row => new KnowledgeNode
+            {
+                Id = Convert.ToInt32(row["Id"]),
+                Title = row["Title"].ToString(),
+                DomainId = Convert.ToInt32(row["DomainId"]),
+                NodeType = row["NodeType"].ToString(),
+                Description = row["Description"].ToString(),
+                ConfidenceLevel = Convert.ToInt32(row["ConfidenceLevel"]),
+                Status = row["Status"].ToString(),
+                CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
+                LastUpdated = Convert.ToDateTime(row["LastUpdated"])
+
+            })
+            .ToList();
         }
 
         public Domain GetDomainById(int domainId)
@@ -88,7 +149,7 @@ namespace Knowledge_Center_API.Services.Core
 
             // Map the first result to a Domain object
             var rawDBRow = rawDBResults.First();
-            Domain domain = ConvertDBRowToClassObj(rawDBRow);
+            Domain domain = ConvertDBRowToDomainBaseObj(rawDBRow);
             return domain;
         }
 
@@ -158,7 +219,7 @@ namespace Knowledge_Center_API.Services.Core
 
         /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
 
-        private Domain ConvertDBRowToClassObj(Dictionary<string, object> rawDBRow)
+        private Domain ConvertDBRowToDomainBaseObj(Dictionary<string, object> rawDBRow)
         {
             return new Domain
             {
@@ -168,6 +229,20 @@ namespace Knowledge_Center_API.Services.Core
                 DomainStatus = rawDBRow["DomainStatus"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"])
+            };
+        }
+
+        private DomainWithKNsDto ConvertDBRowToDomainWithKNsObj(Dictionary<string, object> rawDBRow)
+        {
+            return new DomainWithKNsDto
+            {
+                DomainId = Convert.ToInt32(rawDBRow["DomainId"]),
+                DomainName = rawDBRow["DomainName"].ToString(),
+                DomainDescription = rawDBRow["DomainDescription"].ToString(),
+                DomainStatus = rawDBRow["DomainStatus"].ToString(),
+                CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
+                LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"]),
+                KnowledgNodes = new List<KnowledgeNodeInlineDto>()
             };
         }
     }
