@@ -7,7 +7,7 @@
         public DateTime EntryDate { get; set; }
         public string Content { get; set; }
         public int TagId { get; set; }
-        public string Tag { get; set; }
+        public Tags Tag { get; set; }
         public bool ContributesToProgress { get; set; }
 
     }
