@@ -27,6 +27,10 @@ namespace Knowledge_Center_API.DataAccess
             ORDER BY EntryDate DESC;
         ";
 
+
+        // This JOIN-based query includes Tag info directly with each LogEntry for better performance and fewer DB calls.
+        // I handled KNs and Logs separately in C# earlier to test myself with multi-step composition and DTO mapping.
+        // Here, I prioritized efficiency over modularity to keep things simple and fast for this use case.
         public static readonly string GetAllLogsWithTags = @"
             SELECT 
                 l.LogId,
