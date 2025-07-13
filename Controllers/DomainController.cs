@@ -51,7 +51,7 @@ namespace Knowledge_Center_API.Controllers
                 return Ok(demoDomain);
             }
 
-            var domain = _domainService.GetDomainById(id);
+            var domain = _domainService.GetDomainByIdWithKNs(id);
             if (domain == null)
                 return NotFound(new { message = $"Domain with ID {id} not found." });
 
