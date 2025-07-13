@@ -77,7 +77,7 @@ namespace Knowledge_Center_API.Services.Core
             List<LogEntry> logEntries = new List<LogEntry>();
 
             // SELECT Query + Parameters to retrieve all LogEntries and maps results into LogEntry objects
-            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogs, null);
+            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogsWithTags, null);
 
             if (rawDBResults.Count == 0)
             {
@@ -138,8 +138,13 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
                 EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                 Content = rawDBRow["Content"].ToString(),
+                ContributesToProgress = (bool)rawDBRow["ContributesToProgress"],
                 TagId = Convert.ToInt32(rawDBRow["TagId"]),
-                ContributesToProgress = (bool)rawDBRow["ContributesToProgress"]
+                Tag = new Tags 
+                {
+                    TagId = Convert.ToInt32(rawDBRow["TagId"]),
+                    Name = rawDBRow["TagName"].ToString()
+                }
             };
         }
     }
