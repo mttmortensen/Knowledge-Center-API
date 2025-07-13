@@ -32,7 +32,7 @@ namespace Knowledge_Center_API.Controllers
                 return Ok(DemoData.KnowledgeNodes);
             }
 
-            var nodes = _knowledgeNodeService.GetAllNodes();
+            var nodes = _knowledgeNodeService.GetAllKnolwedgeNodes();
             return Ok(nodes);
         }
 
@@ -51,7 +51,7 @@ namespace Knowledge_Center_API.Controllers
                 return Ok(demoKN);
             }
 
-            var node = _knowledgeNodeService.GetNodeById(id);
+            var node = _knowledgeNodeService.GetKnowledgeNodeWithLogsById(id);
             if (node == null)
                 return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
 
@@ -87,7 +87,7 @@ namespace Knowledge_Center_API.Controllers
             try 
             {
                 // === Step 1: Call service — it handles FieldValidator logic ===
-                bool success = _knowledgeNodeService.CreateNode(node);
+                bool success = _knowledgeNodeService.CreateKnowledgeNode(node);
                 if (!success)
                     return StatusCode(500, new { message = "Failed to create node." });
 
@@ -126,7 +126,7 @@ namespace Knowledge_Center_API.Controllers
                 node.Id = id;
 
                 // Call service — it handles FieldValidator logic
-                bool success = _knowledgeNodeService.UpdateNodeFromDto(node.Id, node);
+                bool success = _knowledgeNodeService.UpdateKnowledgeNodeFromDto(node.Id, node);
                 if (!success)
                     return StatusCode(500, new { message = "Node not found or update failed." });
 
@@ -166,7 +166,7 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "Failed to delete related logs." });
 
             // Now delete the node
-            bool nodeDeleted = _knowledgeNodeService.DeleteNode(id);
+            bool nodeDeleted = _knowledgeNodeService.DeleteKnowledgeNode(id);
             if (!nodeDeleted)
                 return StatusCode(500, new { message = "Node not found or delete failed." });
 
