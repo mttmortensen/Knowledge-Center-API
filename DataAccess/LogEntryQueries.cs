@@ -48,8 +48,11 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByLogId = @"
-            SELECT * FROM LogEntries 
-            WHERE LogId = @LogId;
+            SELECT le.LogId, le.NodeId, le.EntryDate, le.Content, le.ContributesToProgress,
+                   le.TagId, t.Name AS TagName
+            FROM LogEntries le
+            LEFT JOIN Tags t ON le.TagId = t.TagId
+            WHERE le.LogId = @LogId
         ";
 
         public static readonly string DeleteAllLogsByNodeId = @"
