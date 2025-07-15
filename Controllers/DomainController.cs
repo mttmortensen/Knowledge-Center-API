@@ -8,6 +8,10 @@ using System.Xml.Linq;
 
 namespace Knowledge_Center_API.Controllers
 {
+    /// <summary>
+    /// Handles domain management (CRUD).
+    /// Requires JWT authentication.
+    /// </summary>
     [RequireToken]
     [ApiController]
     [Route("api/domains")]
@@ -20,7 +24,9 @@ namespace Knowledge_Center_API.Controllers
             _domainService = domainService;
         }
 
-        // === GET /api/domains ===
+        /// <summary>
+        /// Retrieves all domains.
+        /// </summary>
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -36,7 +42,10 @@ namespace Knowledge_Center_API.Controllers
             return Ok(domains);
         }
 
-        // === GET /api/domains/{id} ===
+        /// <summary>
+        /// Retrieves a specific domain by ID.
+        /// </summary>
+        /// <param name="id">Domain ID.</param>
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -58,7 +67,10 @@ namespace Knowledge_Center_API.Controllers
             return Ok(domain);
         }
 
-        // === POST /api/domains ===
+        /// <summary>
+        /// Creates a new domain.
+        /// </summary>
+        /// <param name="domain">Domain details.</param>
         [HttpPost]
         public IActionResult Create([FromBody] Domain domain)
         {
@@ -101,7 +113,12 @@ namespace Knowledge_Center_API.Controllers
             }
         }
 
-        // === PUT /api/domains/{id} ===
+
+        /// <summary>
+        /// Updates an existing domain.
+        /// </summary>
+        /// <param name="id">Domain ID.</param>
+        /// <param name="domain">Domain details for update.</param>
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] DomainUpdateDto domain)
         {
@@ -139,8 +156,10 @@ namespace Knowledge_Center_API.Controllers
             }
         }
 
-
-        // === DELETE /api/domains/{id} ===
+        /// <summary>
+        /// Deletes a domain by ID.
+        /// </summary>
+        /// <param name="id">Domain ID.</param>
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

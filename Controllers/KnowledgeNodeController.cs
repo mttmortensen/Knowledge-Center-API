@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Knowledge_Center_API.Controllers
 {
+    /// <summary>
+    /// Handles knowledge node operations (CRUD).
+    /// Requires JWT authentication.
+    /// </summary>
     [RequireToken]
     [ApiController]
     [Route("/api/knowledge-nodes")]
@@ -21,7 +25,9 @@ namespace Knowledge_Center_API.Controllers
             _logEntryService = lgService;
         }
 
-        // === GET /api/knowledge-nodes ===
+        /// <summary>
+        /// Retrieves all knowledge nodes.
+        /// </summary>
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -36,7 +42,10 @@ namespace Knowledge_Center_API.Controllers
             return Ok(nodes);
         }
 
-        // === GET /api/knowledge-nodes/{id} ===
+        /// <summary>
+        /// Retrieves a specific knowledge node by ID.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -58,7 +67,10 @@ namespace Knowledge_Center_API.Controllers
             return Ok(node);
         }
 
-        // === POST /api/knowledge-nodes ===
+        /// <summary>
+        /// Creates a new knowledge node.
+        /// </summary>
+        /// <param name="node">Knowledge node details.</param>
         [HttpPost]
         public IActionResult Create([FromBody] KnowledgeNode node)
         {
@@ -106,7 +118,11 @@ namespace Knowledge_Center_API.Controllers
 
         }
 
-        // === PUT /api/knowledge-nodes/{id} ===
+        /// <summary>
+        /// Updates a knowledge node by ID.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
+        /// <param name="node">Updated node data.</param>
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] KnowledgeNodeUpdateDto node)
         {
@@ -144,7 +160,10 @@ namespace Knowledge_Center_API.Controllers
             }
         }
 
-        // === DELETE /api/knowledge-nodes/{id} ===
+        /// <summary>
+        /// Deletes a knowledge node and its associated logs.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
