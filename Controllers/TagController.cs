@@ -6,6 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Knowledge_Center_API.Controllers
 {
+
+    /// <summary>
+    /// Manages tag-related operations.
+    /// Requires JWT authentication.
+    /// </summary>
     [RequireToken]
     [ApiController]
     [Route("api/tags")]
@@ -18,7 +23,10 @@ namespace Knowledge_Center_API.Controllers
             _tagService = tagService;
         }
 
-        // === GET /api/tags ===
+        /// <summary>
+        /// Retrieves all tags.
+        /// </summary>
+        /// <returns>200 OK with a list of tags.</returns>
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -33,7 +41,11 @@ namespace Knowledge_Center_API.Controllers
             return Ok(tags);
         }
 
-        // === GET /api/tags/{id} ===
+        /// <summary>
+        /// Retrieves a tag by its ID.
+        /// </summary>
+        /// <param name="id">Tag ID.</param>
+        /// <returns>200 OK with the tag details or 404 if not found.</returns>
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -55,7 +67,11 @@ namespace Knowledge_Center_API.Controllers
             return Ok(tag);
         }
 
-        // === POST /api/tags ===
+        /// <summary>
+        /// Creates a new tag.
+        /// </summary>
+        /// <param name="tag">Tag details.</param>
+        /// <returns>201 Created with the created tag.</returns>
         [HttpPost]
         public IActionResult Create([FromBody] Tags tag)
         {
@@ -95,7 +111,12 @@ namespace Knowledge_Center_API.Controllers
             }
         }
 
-        // === PUT /api/tags/{id} ===
+        /// <summary>
+        /// Updates an existing tag.
+        /// </summary>
+        /// <param name="id">Tag ID.</param>
+        /// <param name="tag">Updated tag details.</param>
+        /// <returns>200 OK if update is successful.</returns>
         [HttpPut("{id}")]
         public IActionResult Update(int id, [FromBody] Tags tag)
         {
@@ -133,7 +154,11 @@ namespace Knowledge_Center_API.Controllers
             }
         }
 
-        // === DELETE /api/tags/{id} ===
+        /// <summary>
+        /// Deletes a tag by its ID.
+        /// </summary>
+        /// <param name="id">Tag ID.</param>
+        /// <returns>204 No Content if deleted successfully.</returns>
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

@@ -9,6 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Knowledge_Center_API.Controllers
 {
+    /// <summary>
+    /// Handles operations related to log entries (CRUD).
+    /// Requires JWT authentication.
+    /// </summary>
     [RequireToken]
     [ApiController]
     [Route("api/logs")]
@@ -21,7 +25,11 @@ namespace Knowledge_Center_API.Controllers
             _logEntryService = logEntryService;
         }
 
-        // === GET /api/logs ===
+        /// <summary>
+        /// Retrieves all log entries.
+        /// </summary>
+        /// <returns>200 OK with a list of logs.</returns>
+        /// <response code="200">List of logs retrieved successfully.</response>
         [HttpGet]
         public IActionResult GetAll()
         {
@@ -36,7 +44,13 @@ namespace Knowledge_Center_API.Controllers
             return Ok(logs);
         }
 
-        // === GET /api/logs/{id} ===
+        /// <summary>
+        /// Retrieves a specific log entry by ID.
+        /// </summary>
+        /// <param name="id">The ID of the log entry.</param>
+        /// <returns>200 OK with the log entry, or 404 if not found.</returns>
+        /// <response code="200">Log entry found.</response>
+        /// <response code="404">Log entry not found.</response>
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
@@ -58,7 +72,15 @@ namespace Knowledge_Center_API.Controllers
             return Ok(log);
         }
 
-        // === POST /api/logs ===
+        /// <summary>
+        /// Creates a new log entry.
+        /// </summary>
+        /// <param name="log">Log entry details.</param>
+        /// <returns>201 Created with the created log entry.</returns>
+        /// <response code="201">Log entry created successfully.</response>
+        /// <response code="400">Invalid input.</response>
+        /// <response code="429">Rate limit exceeded.</response>
+        /// <response code="500">Server error during creation.</response>
         [HttpPost]
         public IActionResult Create([FromBody] LogEntryCreateDto log)
         {
