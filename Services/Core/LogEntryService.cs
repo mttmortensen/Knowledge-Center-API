@@ -110,6 +110,31 @@ namespace Knowledge_Center_API.Services.Core
             return ConvertDBRowToClassObj(rawDBResults[0]);
         }
 
+        /*
+         * Retrieves all log entries associated with a specific Knowledge Node by its Id
+         * and maps the result rows to LogEntry objects, and returns them as a list. 
+        */
+
+        public List<LogEntry> GetLogsForKnowledgeNode(int nodeId)
+        {
+            List<SqlParameter> parameters = new List<SqlParameter>
+            {
+                new SqlParameter("@NodeId", nodeId)
+            };
+
+            var rawResults = _database.ExecuteQuery(LogEntryQueries.GetLogsByNodeId, parameters);
+
+            return rawResults.Select(row => new LogEntry
+            {
+                LogId = Convert.ToInt32(row["LogId"]),
+                NodeId = Convert.ToInt32(row["NodeId"]),
+                EntryDate = Convert.ToDateTime(row["EntryDate"]),
+                Content = row["Content"].ToString(),
+                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"])
+            })
+            .ToList();
+        }
+
         // === DELETE ===
         public bool DeleteAllLogEntriesByNodeId(int nodeId)
         {
