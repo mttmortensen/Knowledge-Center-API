@@ -26,12 +26,13 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all log entries.
+        /// Retrieves all log entries, optionally filtered by Knowledge Node ID.
         /// </summary>
         /// <returns>200 OK with a list of logs.</returns>
+        /// <param name="nodeId">Optional Knowledge Node ID to filter logs.</param>
         /// <response code="200">List of logs retrieved successfully.</response>
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] int? nodeId)
         {
             // Demo mode: Read-only
             if (User.HasClaim("demo", "true"))
@@ -40,7 +41,9 @@ namespace Knowledge_Center_API.Controllers
                 return Ok(DemoData.LogEntries);
             }
 
-            var logs = _logEntryService.GetAllLogEntries();
+            var logs = nodeId.HasValue
+                ? _logEntryService.GetLogsForKnowledgeNode(nodeId.Value)
+                : _logEntryService.GetAllLogEntries();
             return Ok(logs);
         }
 
