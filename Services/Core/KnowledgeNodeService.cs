@@ -15,10 +15,12 @@ namespace Knowledge_Center_API.Services.Core
     public class KnowledgeNodeService
     {
         private readonly Database _database;
+        private readonly LogEntryService _lgservice;
 
-        public KnowledgeNodeService(Database database)
+        public KnowledgeNodeService(Database database, LogEntryService lgservice)
         {
             _database = database;
+            _lgservice = lgservice;
         }
 
         /* ===================== CRUD ===================== */
@@ -98,7 +100,8 @@ namespace Knowledge_Center_API.Services.Core
             KnowledgeNodeWithLogsDto nodeDto = ConvertDBRowToKNWithLogsDto(rawDBResults[0]);
 
             // Fetch Logs
-            List<LogEntry> logs = GetLogsForKnowledgeNode(id);
+            List<LogEntry> logs = _lgservice.GetLogsForKnowledgeNode(id);
+
             // Adding Logs to Dto
             nodeDto.Logs = logs.Select(log => new LogEntryInlineDto 
             {
@@ -111,32 +114,6 @@ namespace Knowledge_Center_API.Services.Core
             .ToList();
 
             return nodeDto;
-        }
-
-        /*
-         * Retrieves all log entries associated with a specific Knowledge Node by its Id
-         * and maps the result rows to LogEntry objects, and returns them as a list. 
-         * For LogEntryInline to include essential fields; excludes unrelated data like tags.
-         */
-
-        private List<LogEntry> GetLogsForKnowledgeNode(int nodeId)
-        {
-            List<SqlParameter> parameters = new List<SqlParameter>
-            {
-                new SqlParameter("@NodeId", nodeId)
-            };
-
-            var rawResults = _database.ExecuteQuery(LogEntryQueries.GetLogsByNodeId, parameters);
-
-            return rawResults.Select(row => new LogEntry
-            {
-                LogId = Convert.ToInt32(row["LogId"]),
-                NodeId = Convert.ToInt32(row["NodeId"]),
-                EntryDate = Convert.ToDateTime(row["EntryDate"]),
-                Content = row["Content"].ToString(),
-                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"])
-            })
-            .ToList();
         }
 
         // === UPDATE ===
