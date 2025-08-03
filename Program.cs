@@ -137,6 +137,11 @@ namespace Knowledge_Center_API
 
             // Base Path for API (reverse proxy scenario)
             app.UsePathBase("/kc");
+            app.Use((context, next) =>
+            {
+                context.Request.PathBase = "/kc";
+                return next();
+            });
             app.UseStaticFiles();
 
             /* =======================================================
