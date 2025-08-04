@@ -33,41 +33,62 @@ namespace Knowledge_Center_API.Services.Core
             var log = new LogEntry
             {
                 NodeId = dto.NodeId,
-                TagId = dto.TagId,
                 Content = dto.Content,
-                ContributesToProgress = dto.ContributesToProgress
+                ContributesToProgress = dto.ContributesToProgress,
+                Tags = new List<Tags>()
             };
 
-            return CreateLogEntry(log); // call the existing logic
+            int newLogId = InsertLogEntry(log);
+            if (newLogId > 0) return false;
+
+            AssignTagsToLog(newLogId, dto.TagIds);
+
+            return true; 
         }
 
-        public bool CreateLogEntry(LogEntry log)
+        private int InsertLogEntry(LogEntry log)
         {
             // Validate Input Fields 
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
             FieldValidator.ValidateRequiredString(log.Content, "Log Content", 2000);
-            FieldValidator.ValidateId(log.TagId, "Tag ID");
 
 
-            // Set timestamps
-            DateTime now = DateTime.Now;
-            log.EntryDate = now;
+            // Set timestamp
+            log.EntryDate = DateTime.Now;
 
             var parameters = new List<SqlParameter>
             {
                 new SqlParameter("@NodeId", SqlDbType.Int) { Value = log.NodeId },
                 new SqlParameter("@EntryDate", SqlDbType.DateTime) { Value = log.EntryDate },
                 new SqlParameter("@Content", SqlDbType.NVarChar, 2000) { Value = log.Content },
-                new SqlParameter("@TagId", SqlDbType.Int) { Value = log.TagId },
                 new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress }
             };
 
 
-            // Run the INSERT query
-            int result = _database.ExecuteNonQuery(LogEntryQueries.InsertLogEntry, parameters);
+            // Run the ExecuteScaler command 
+            int newLogId = _database.ExecuteScalar<int>
+                (
+                    LogEntryQueries.InsertLogEntry,
+                    parameters
+                );
 
-            // Return true to see if INSERT was successful
-            return result > 0;
+            return newLogId;
+        }
+
+        private void AssignTagsToLog(int logId, List<int> tagIds) 
+        {
+            foreach(int tagId in tagIds) 
+            {
+                FieldValidator.ValidateId(tagId, "Tag ID");
+
+                var parameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@LogId", SqlDbType.Int) {Value = logId},
+                    new SqlParameter("@TagId", SqlDbType.Int) {Value = tagId},
+                };
+
+                _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);
+            }
         }
 
         // === READ ===

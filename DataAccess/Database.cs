@@ -84,5 +84,27 @@ namespace Knowledge_Center_API.DataAccess
             return results;
         }
 
+        public T ExecuteScalar<T>(string query, List<SqlParameter> parameters) 
+        {
+            using (var connection = OpenConnection())
+            using (var command = new SqlCommand(query, connection)) 
+            {
+                if(parameters != null)
+                {
+                    foreach(var parm in parameters) 
+                    {
+                        command.Parameters.Add(parm);
+                    }
+                }
+
+                object result = command.ExecuteScalar();
+
+                if (result == null || result == DBNull.Value)
+                    return default;
+
+                return (T)Convert.ChangeType(result, typeof(T));
+            }
+        }
+
     }
 }
