@@ -98,16 +98,20 @@ namespace Knowledge_Center_API.Services.Core
             List<LogEntry> logEntries = new List<LogEntry>();
 
             // SELECT Query + Parameters to retrieve all LogEntries and maps results into LogEntry objects
-            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogsWithTags, null);
-
-            if (rawDBResults.Count == 0)
-            {
-                return null;
-            }
+            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogsWithoutTags, null);
+            if (rawDBResults.Count == 0) return logEntries;
 
             foreach (var rawDBRow in rawDBResults)
             {
-                logEntries.Add(ConvertDBRowToClassObj(rawDBRow));
+                logEntries.Add(new LogEntry
+                {
+                    LogId = Convert.ToInt32(rawDBRow["LogId"]),
+                    NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
+                    EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
+                    Content = rawDBRow["Content"].ToString(),
+                    ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                    Tags = new()
+                });
             }
 
             return logEntries;
@@ -172,26 +176,6 @@ namespace Knowledge_Center_API.Services.Core
 
             // Return true to see if DELETE was successful
             return result > 0;
-        }
-
-        /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
-
-        private LogEntry ConvertDBRowToClassObj(Dictionary<string, object> rawDBRow)
-        {
-            return new LogEntry
-            {
-                LogId = Convert.ToInt32(rawDBRow["LogId"]),
-                NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
-                EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
-                Content = rawDBRow["Content"].ToString(),
-                ContributesToProgress = (bool)rawDBRow["ContributesToProgress"],
-                TagId = Convert.ToInt32(rawDBRow["TagId"]),
-                Tag = new Tags 
-                {
-                    TagId = Convert.ToInt32(rawDBRow["TagId"]),
-                    Name = rawDBRow["TagName"].ToString()
-                }
-            };
         }
     }
 }
