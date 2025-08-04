@@ -41,12 +41,12 @@ namespace Knowledge_Center_API.Services.Core
             int newLogId = InsertLogEntry(log);
             if (newLogId > 0) return false;
 
-
+            AssignTagsToLog(newLogId, dto.TagIds);
 
             return true; 
         }
 
-        public int InsertLogEntry(LogEntry log)
+        private int InsertLogEntry(LogEntry log)
         {
             // Validate Input Fields 
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
@@ -73,6 +73,11 @@ namespace Knowledge_Center_API.Services.Core
                 );
 
             return newLogId;
+        }
+
+        private void AssignTagsToLog(int logId, List<int> tagIds) 
+        {
+
         }
 
         // === READ ===
