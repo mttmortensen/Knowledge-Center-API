@@ -11,7 +11,7 @@
     {
         public int Id { get; set; }
         public int NodeId { get; set; }
-        public int TagId { get; set; }
+        public List<int> TagIds { get; set; } = new();
         public string Content { get; set; }
         public bool ContributesToProgress { get; set; }
         public DateTime EntryDate { get; set; }
