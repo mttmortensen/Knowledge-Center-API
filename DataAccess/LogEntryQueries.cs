@@ -11,10 +11,12 @@ namespace Knowledge_Center_API.DataAccess
     {
         public static readonly string InsertLogEntry = @"
             INSERT INTO LogEntries 
-                    (NodeId, EntryDate, Content, TagId, ContributesToProgress)
+                (NodeId, EntryDate, Content, ContributesToProgress)
+            OUTPUT INSERTED.LogId
             VALUES 
-                    (@NodeId, @EntryDate, @Content, @TagId, @ContributesToProgress);
+                (@NodeId, @EntryDate, @Content, @ContributesToProgress);
         ";
+
 
         public static readonly string GetLogsByNodeId = @"
             SELECT * FROM LogEntries 
