@@ -65,11 +65,14 @@ namespace Knowledge_Center_API.Services.Core
             };
 
 
-            // Run the INSERT query
-            int result = _database.ExecuteNonQuery(LogEntryQueries.InsertLogEntry, parameters);
+            // Run the ExecuteScaler command 
+            int newLogId = _database.ExecuteScalar<int>
+                (
+                    LogEntryQueries.InsertLogEntry,
+                    parameters
+                );
 
-            // Return true to see if INSERT was successful
-            return result > 0;
+            return newLogId;
         }
 
         // === READ ===
