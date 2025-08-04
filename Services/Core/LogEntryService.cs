@@ -38,19 +38,23 @@ namespace Knowledge_Center_API.Services.Core
                 Tags = new List<Tags>()
             };
 
-            return CreateLogEntry(log); // call the existing logic
+            int newLogId = InsertLogEntry(log);
+            if (newLogId > 0) return false;
+
+
+
+            return true; 
         }
 
-        public bool CreateLogEntry(LogEntry log)
+        public int InsertLogEntry(LogEntry log)
         {
             // Validate Input Fields 
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
             FieldValidator.ValidateRequiredString(log.Content, "Log Content", 2000);
 
 
-            // Set timestamps
-            DateTime now = DateTime.Now;
-            log.EntryDate = now;
+            // Set timestamp
+            log.EntryDate = DateTime.Now;
 
             var parameters = new List<SqlParameter>
             {
