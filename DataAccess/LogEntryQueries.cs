@@ -17,6 +17,11 @@ namespace Knowledge_Center_API.DataAccess
                 (@NodeId, @EntryDate, @Content, @ContributesToProgress);
         ";
 
+        public static readonly string InsertLogTagRelation = @"
+            INSERT INTO LogEntryTags (LogId, TagId)
+            VALUES (@LogId, @TagId);
+        ";
+
 
         public static readonly string GetLogsByNodeId = @"
             SELECT * FROM LogEntries 
