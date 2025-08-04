@@ -33,9 +33,9 @@ namespace Knowledge_Center_API.Services.Core
             var log = new LogEntry
             {
                 NodeId = dto.NodeId,
-                TagId = dto.TagId,
                 Content = dto.Content,
-                ContributesToProgress = dto.ContributesToProgress
+                ContributesToProgress = dto.ContributesToProgress,
+                Tags = new List<Tags>()
             };
 
             return CreateLogEntry(log); // call the existing logic
@@ -46,7 +46,6 @@ namespace Knowledge_Center_API.Services.Core
             // Validate Input Fields 
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
             FieldValidator.ValidateRequiredString(log.Content, "Log Content", 2000);
-            FieldValidator.ValidateId(log.TagId, "Tag ID");
 
 
             // Set timestamps
@@ -58,7 +57,6 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@NodeId", SqlDbType.Int) { Value = log.NodeId },
                 new SqlParameter("@EntryDate", SqlDbType.DateTime) { Value = log.EntryDate },
                 new SqlParameter("@Content", SqlDbType.NVarChar, 2000) { Value = log.Content },
-                new SqlParameter("@TagId", SqlDbType.Int) { Value = log.TagId },
                 new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress }
             };
 
