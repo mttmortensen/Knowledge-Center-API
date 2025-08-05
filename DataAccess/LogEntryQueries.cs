@@ -35,22 +35,18 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
 
-        // This JOIN-based query includes Tag info directly with each LogEntry for better performance and fewer DB calls.
-        // I handled KNs and Logs separately in C# earlier to test myself with multi-step composition and DTO mapping.
-        // Here, I prioritized efficiency over modularity to keep things simple and fast for this use case.
-        public static readonly string GetAllLogsWithTags = @"
-            SELECT 
-                l.LogId,
-                l.NodeId,
-                l.EntryDate,
-                l.Content,
-                l.ContributesToProgress,
-                l.TagId,
-                t.Name AS TagName
-            FROM 
-                LogEntries l
-            LEFT JOIN 
-                Tags t ON l.TagId = t.TagId;
+        // Removing GetAllLogsWithTags query since now 
+        // We are building out the logs and tags in the service layer.
+        public static readonly string GetAllLogsWithoutTags = @"
+            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress
+            FROM LogEntries
+            ORDER BY EntryDate DESC;
+        ";
+
+        public static readonly string GetAllLogTagRelations = @"
+            SELECT lt.LogId, t.TagId, t.Name AS TagName
+            FROM LogEntryTags lt
+            INNER JOIN Tags t ON lt.TagId = t.TagId;
         ";
 
 
@@ -61,6 +57,23 @@ namespace Knowledge_Center_API.DataAccess
             LEFT JOIN Tags t ON le.TagId = t.TagId
             WHERE le.LogId = @LogId
         ";
+
+        public static readonly string GetLogByIdWithoutTags = @"
+            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress
+            FROM LogEntries
+            WHERE LogId = @LogId;
+        ";
+
+        public static readonly string GetLogTagRelationsByLogId = @"
+            SELECT lt.LogId,
+                   t.TagId,
+                   t.Name AS TagName
+            FROM LogEntryTags lt
+            INNER JOIN Tags t
+                ON lt.TagId = t.TagId
+            WHERE lt.LogId = @LogId;
+        ";
+
 
         public static readonly string DeleteAllLogsByNodeId = @"
             DELETE FROM LogEntries 

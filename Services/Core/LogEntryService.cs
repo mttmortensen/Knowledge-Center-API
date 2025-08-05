@@ -95,19 +95,46 @@ namespace Knowledge_Center_API.Services.Core
 
         public List<LogEntry> GetAllLogEntries()
         {
+            // Building out the log without tags
             List<LogEntry> logEntries = new List<LogEntry>();
 
             // SELECT Query + Parameters to retrieve all LogEntries and maps results into LogEntry objects
-            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogsWithTags, null);
-
-            if (rawDBResults.Count == 0)
-            {
-                return null;
-            }
+            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogsWithoutTags, null);
+            if (rawDBResults.Count == 0) return logEntries;
 
             foreach (var rawDBRow in rawDBResults)
             {
-                logEntries.Add(ConvertDBRowToClassObj(rawDBRow));
+                logEntries.Add(new LogEntry
+                {
+                    LogId = Convert.ToInt32(rawDBRow["LogId"]),
+                    NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
+                    EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
+                    Content = rawDBRow["Content"].ToString(),
+                    ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                    Tags = new() // Placeholder
+                });
+            }
+
+            // Now we map out the tags to the log. 
+            // Fetching all tag relations 
+            var tagResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogTagRelations, null);
+
+            // Group the tags by LogId
+            var logTagMap = tagResults
+                .GroupBy(r => Convert.ToInt32(r["LogId"]))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t => new Tags
+                    {
+                        TagId = Convert.ToInt32(t["TagId"]),
+                        Name = t["TagName"].ToString()
+                    }).ToList()
+                );
+
+            foreach(var log in logEntries) 
+            {
+                if (logTagMap.ContainsKey(log.LogId))
+                    log.Tags = logTagMap[log.LogId];
             }
 
             return logEntries;
@@ -122,13 +149,37 @@ namespace Knowledge_Center_API.Services.Core
             {
                 new SqlParameter("@LogId", SqlDbType.Int) { Value = logId }
             };
+
             // SELECT Query + Parameters to retrieve a specific LogEntry by LogID and map result into a LogEntry object
-            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetLogByLogId, parameters);
-            if (rawDBResults.Count == 0)
+            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetLogByIdWithoutTags, parameters);
+            if (rawDBResults.Count == 0) return null;
+
+            // Build out the log, no tags
+            var rawDBRow = rawDBResults[0];
+            var log = new LogEntry
             {
-                return null;
+                LogId = Convert.ToInt32(rawDBRow["LogId"]),
+                NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
+                EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
+                Content = rawDBRow["Content"].ToString(),
+                ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                Tags = new List<Tags>()
+            };
+
+            // Get it's tags
+            var tagRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
+
+            // Add the tags to the log
+            foreach(var tag in tagRows) 
+            {
+                log.Tags.Add(new Tags
+                {
+                    TagId = Convert.ToInt32(tag["TagId"]),
+                    Name = tag["TagName"].ToString()
+                });
             }
-            return ConvertDBRowToClassObj(rawDBResults[0]);
+
+            return log;
         }
 
         /*
@@ -172,26 +223,6 @@ namespace Knowledge_Center_API.Services.Core
 
             // Return true to see if DELETE was successful
             return result > 0;
-        }
-
-        /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
-
-        private LogEntry ConvertDBRowToClassObj(Dictionary<string, object> rawDBRow)
-        {
-            return new LogEntry
-            {
-                LogId = Convert.ToInt32(rawDBRow["LogId"]),
-                NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
-                EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
-                Content = rawDBRow["Content"].ToString(),
-                ContributesToProgress = (bool)rawDBRow["ContributesToProgress"],
-                TagId = Convert.ToInt32(rawDBRow["TagId"]),
-                Tag = new Tags 
-                {
-                    TagId = Convert.ToInt32(rawDBRow["TagId"]),
-                    Name = rawDBRow["TagName"].ToString()
-                }
-            };
         }
     }
 }
