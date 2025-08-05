@@ -58,6 +58,23 @@ namespace Knowledge_Center_API.DataAccess
             WHERE le.LogId = @LogId
         ";
 
+        public static readonly string GetLogByIdWithoutTags = @"
+            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress
+            FROM LogEntries
+            WHERE LogId = @LogId;
+        ";
+
+        public static readonly string GetLogTagRelationsByLogId = @"
+            SELECT lt.LogId,
+                   t.TagId,
+                   t.Name AS TagName
+            FROM LogEntryTags lt
+            INNER JOIN Tags t
+                ON lt.TagId = t.TagId
+            WHERE lt.LogId = @LogId;
+        ";
+
+
         public static readonly string DeleteAllLogsByNodeId = @"
             DELETE FROM LogEntries 
             WHERE NodeId = @NodeId;
