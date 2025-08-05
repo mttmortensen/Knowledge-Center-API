@@ -84,7 +84,7 @@ namespace Knowledge_Center_API.Services.Core
             var parameters = new List<SqlParameter> { new SqlParameter(@"LogId", SqlDbType.Int) { Value = logId } };
             var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
 
-            // Take existing rows and make a hash set for looking up before adding to a hash
+            // Take existing rows and making a hashset for the ints to use in toAdd
             var existingTagIds = existingRows
                 .Select(r => Convert.ToInt32(r["TagId"]))
                 .ToHashSet();
