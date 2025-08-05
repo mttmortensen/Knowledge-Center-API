@@ -95,6 +95,7 @@ namespace Knowledge_Center_API.Services.Core
 
         public List<LogEntry> GetAllLogEntries()
         {
+            // Building out the log without tags
             List<LogEntry> logEntries = new List<LogEntry>();
 
             // SELECT Query + Parameters to retrieve all LogEntries and maps results into LogEntry objects
@@ -110,8 +111,30 @@ namespace Knowledge_Center_API.Services.Core
                     EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                     Content = rawDBRow["Content"].ToString(),
                     ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
-                    Tags = new()
+                    Tags = new() // Placeholder
                 });
+            }
+
+            // Now we map out the tags to the log. 
+            // Fetching all tag relations 
+            var tagResults = _database.ExecuteQuery(LogEntryQueries.GetAllLogTagRelations, null);
+
+            // Group the tags by LogId
+            var logTagMap = tagResults
+                .GroupBy(r => Convert.ToInt32(r["LogId"]))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t => new Tags
+                    {
+                        TagId = Convert.ToInt32(t["TagId"]),
+                        Name = t["TagName"].ToString()
+                    }).ToList()
+                );
+
+            foreach(var log in logEntries) 
+            {
+                if (logTagMap.ContainsKey(log.LogId))
+                    log.Tags = logTagMap[log.LogId];
             }
 
             return logEntries;
