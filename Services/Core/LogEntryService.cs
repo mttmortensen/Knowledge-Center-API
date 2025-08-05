@@ -41,7 +41,7 @@ namespace Knowledge_Center_API.Services.Core
             int newLogId = InsertLogEntry(log);
             if (newLogId > 0) return false;
 
-            AssignTagsToLog(newLogId, dto.TagIds);
+            BulkInsertLogEntryTagRelation(newLogId, dto.TagIds);
 
             return true; 
         }
@@ -75,7 +75,37 @@ namespace Knowledge_Center_API.Services.Core
             return newLogId;
         }
 
-        private void AssignTagsToLog(int logId, List<int> tagIds) 
+        public List<int> AddNewTagsToLog(int logId, List<int> tagIds) 
+        {
+            // Validate the LogId
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            // Fetch current tagIDs on this log
+            var parameters = new List<SqlParameter> { new SqlParameter(@"LogId", SqlDbType.Int) { Value = logId } };
+            var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
+
+            // Take existing rows and make a hash set for looking up before adding to a hash
+            var existingTagIds = existingRows
+                .Select(r => Convert.ToInt32(r["TagId"]))
+                .ToHashSet();
+
+            // Filter out duplicates
+            var toAdd = existingTagIds
+                .Where(id => !existingTagIds.Contains(id))
+                .Distinct()
+                .ToList();
+
+            // Another round of validation for tag ID
+            foreach(int tagId in toAdd) 
+            {
+                FieldValidator.ValidateId(tagId, "Tag ID");
+                SingleInsertLogEntryTagRelation(logId, tagId);
+            }
+
+            return toAdd;
+        }
+
+        private void BulkInsertLogEntryTagRelation(int logId, List<int> tagIds) 
         {
             foreach(int tagId in tagIds) 
             {
@@ -89,6 +119,17 @@ namespace Knowledge_Center_API.Services.Core
 
                 _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);
             }
+        }
+
+        private void SingleInsertLogEntryTagRelation(int logId, int tagId) 
+        {
+            var parameters = new List<SqlParameter>
+            {
+                new SqlParameter("@LogId", SqlDbType.Int) {Value = logId},
+                new SqlParameter("@TagId", SqlDbType.Int) {Value = tagId},
+            };
+
+            _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);
         }
 
         // === READ ===
