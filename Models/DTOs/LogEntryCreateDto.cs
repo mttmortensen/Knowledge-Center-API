@@ -3,9 +3,8 @@
     /*
      * POST /api/logs
      * 
-     * This DTO is going to be used in only creating 
-     * of a Log Entry as we don't need to pull in the 
-     * Tag name/value as the front end will handle this
+     * This DTO is used for creating a new LogEntry.
+     * The front-end supplies a list of TagIds.
      */
     public class LogEntryCreateDto
     {
