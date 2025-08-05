@@ -149,13 +149,37 @@ namespace Knowledge_Center_API.Services.Core
             {
                 new SqlParameter("@LogId", SqlDbType.Int) { Value = logId }
             };
+
             // SELECT Query + Parameters to retrieve a specific LogEntry by LogID and map result into a LogEntry object
-            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetLogByLogId, parameters);
-            if (rawDBResults.Count == 0)
+            var rawDBResults = _database.ExecuteQuery(LogEntryQueries.GetLogByIdWithoutTags, parameters);
+            if (rawDBResults.Count == 0) return null;
+
+            // Build out the log, no tags
+            var rawDBRow = rawDBResults[0];
+            var log = new LogEntry
             {
-                return null;
+                LogId = Convert.ToInt32(rawDBRow["LogId"]),
+                NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
+                EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
+                Content = rawDBRow["Content"].ToString(),
+                ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                Tags = new List<Tags>()
+            };
+
+            // Get it's tags
+            var tagRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
+
+            // Add the tags to the log
+            foreach(var tag in tagRows) 
+            {
+                log.Tags.Add(new Tags
+                {
+                    TagId = Convert.ToInt32(tag["TagId"]),
+                    Name = tag["TagName"].ToString()
+                });
             }
-            return ConvertDBRowToClassObj(rawDBResults[0]);
+
+            return log;
         }
 
         /*
