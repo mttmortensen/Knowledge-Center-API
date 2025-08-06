@@ -168,12 +168,12 @@ namespace Knowledge_Center_API.Controllers
         /// <summary>
         /// Deletes all tags from a specific log entry.
         /// </summary>
-        /// <param name="id">ID of the log entry.</param>
+        /// <param name="logId">ID of the log entry.</param>
         /// <returns>204 No Content if successful.</returns>
         /// <response code="204">Tags deleted successfully.</response>
         /// <response code="404">Log not found or no tags to delete.</response>
         /// <response code="500">Server error during tag deletion.</response>
-        [HttpDelete("{id}/tags")]
+        [HttpDelete("{logId}/tags")]
         public IActionResult DeleteAllTagsFromLog(int logId) 
         {
             try 
@@ -189,6 +189,38 @@ namespace Knowledge_Center_API.Controllers
                     : NotFound(new { message = $"No tags were found on Log ID {logId} to delete. " });
             }
             catch(Exception) 
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        /// <summary>
+        /// Deletes specific tags from a log entry.
+        /// </summary>
+        /// <param name="logId">ID of the log entry.</param>
+        /// <param name="dto">DTO containing tag IDs to remove.</param>
+        /// <returns>204 No Content if successful.</returns>
+        /// <response code="204">Specified tags deleted successfully.</response>
+        /// <response code="400">Invalid or missing tag IDs.</response>
+        /// <response code="404">Log not found.</response>
+        /// <response code="500">Server error during tag deletion.</response>
+        [HttpDelete("{logId}/tags/specific")]
+        public IActionResult DeleteSpecificTagsFromLog(int logId, [FromBody] LogTagDeleteDto dto) 
+        {
+            try
+            {
+                var log = _logEntryService.GetLogEntryByLogId(logId);
+                if (log == null)
+                    return NotFound(new { message = $"Log with ID: {logId} was not found. " });
+
+                if (dto?.TagIds == null || dto.TagIds.Count == 0)
+                    return BadRequest(new { message = "No tag IDs provided for deletion" });
+
+                _logEntryService.RemoveSpecificTagsFromLog(logId, dto.TagIds);
+
+                return NoContent();
+            }
+            catch (Exception) 
             {
                 return StatusCode(500, new { message = "An unexpected error occurred." });
             }
