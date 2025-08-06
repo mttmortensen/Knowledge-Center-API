@@ -28,7 +28,7 @@ namespace Knowledge_Center_API.Services.Core
 
         // This update method is what can allow to not have the 
         // Tag value. Won't break the FieldValidator
-        public bool CreateLogEntryFromDto(LogEntryCreateDto dto)
+        public int CreateLogEntryAndReturnId(LogEntryCreateDto dto)
         {
             var log = new LogEntry
             {
@@ -39,11 +39,11 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             int newLogId = InsertLogEntry(log);
-            if (newLogId > 0) return false;
+            if (newLogId > 0) return -1;
 
             BulkInsertLogEntryTagRelation(newLogId, dto.TagIds);
 
-            return true; 
+            return newLogId; 
         }
 
         private int InsertLogEntry(LogEntry log)

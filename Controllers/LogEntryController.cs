@@ -110,11 +110,17 @@ namespace Knowledge_Center_API.Controllers
                 // === Step 1: Call service — it handles FieldValidator logic ===
                 log.EntryDate = DateTime.Now;
 
-                bool success = _logEntryService.CreateLogEntryFromDto(log);
-                if (!success)
+                // Get the created ID back
+                int newLogId = _logEntryService.CreateLogEntryAndReturnId(log);
+
+                if (newLogId <= 0)
                     return StatusCode(500, new { message = "Failed to create log entry." });
 
-                return CreatedAtAction(nameof(GetById), new { id = log.Id }, log);
+                // Refetch full log including tags
+                var createdLog = _logEntryService.GetLogEntryByLogId(newLogId);
+
+                return CreatedAtAction(nameof(GetById), new { id = newLogId }, createdLog);
+
             }
             catch (ArgumentException ex)
             {
