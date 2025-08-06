@@ -270,6 +270,30 @@ namespace Knowledge_Center_API.Services.Core
             return true;
         }
 
+        public bool RemoveSpecificTagsFromLog(int logId, List<int> tagIdsToRemove)
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            if (tagIdsToRemove == null || tagIdsToRemove.Count == 0)
+                throw new ArgumentException("At least one tag ID must be provided.");
+
+            foreach (int tagId in tagIdsToRemove)
+            {
+                FieldValidator.ValidateId(tagId, "Tag ID");
+
+                var parameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
+                    new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                };
+
+                _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, parameters);
+            }
+
+            return true;
+        }
+
+
         /* ===================== HELPERS ===================== */
 
         private void BulkInsertLogEntryTagRelation(int logId, List<int> tagIds)
