@@ -81,7 +81,7 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
         public static readonly string DeleteLogTagRelations = @"
-            DELETE FROM LogTagRelations
+            DELETE FROM LogEntryTags
             WHERE LogId = @LogId AND TagId = @TagId;
         ";
     }
