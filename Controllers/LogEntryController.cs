@@ -141,7 +141,7 @@ namespace Knowledge_Center_API.Controllers
         /// <response code="400">Invalid input.</response>
         /// <response code="404">Log not found.</response>
         /// <response code="500">Server error during update.</response>
-        [HttpPut("{id}/tags")]
+        [HttpPut("{logId}/tags")]
         public IActionResult ReplaceTags(int logId, [FromBody] LogTagUpdateDto dto) 
         {
             try 
@@ -159,9 +159,9 @@ namespace Knowledge_Center_API.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch(Exception) 
+            catch(Exception ex) 
             {
-                return StatusCode(500, new { message = "An unexpected error occured. " });
+                return StatusCode(500, new { message = "EXCEPTION: " + ex.Message });
             }
         }
 
