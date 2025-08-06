@@ -1,6 +1,4 @@
-﻿using Azure;
-using Azure.Core;
-using Knowledge_Center_API.DataAccess.Demo;
+﻿using Knowledge_Center_API.DataAccess.Demo;
 using Knowledge_Center_API.Models;
 using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Core;
@@ -130,6 +128,40 @@ namespace Knowledge_Center_API.Controllers
             catch (Exception)
             {
                 return StatusCode(500, new { message = "An unexpected error occured" });
+            }
+        }
+
+        /// <summary>
+        /// Replaces all tags on a specific log entry.
+        /// </summary>
+        /// <param name="logId">ID of the log entry to update.</param>
+        /// <param name="dto">DTO containing the list of new tag IDs.</param>
+        /// <returns>204 No Content if successful.</returns>
+        /// <response code="204">Tags updated successfully.</response>
+        /// <response code="400">Invalid input.</response>
+        /// <response code="404">Log not found.</response>
+        /// <response code="500">Server error during update.</response>
+        [HttpPut("{id}/tags")]
+        public IActionResult ReplaceTags(int logId, [FromBody] LogTagUpdateDto dto) 
+        {
+            try 
+            {
+                // Validate log
+                var existingLog = _logEntryService.GetLogEntryByLogId(logId);
+                if (existingLog == null)
+                    return NotFound(new { message = $"Log with ID {logId} was not found." });
+
+                _logEntryService.ReplaceTagsOnLog(logId, dto.TagIds);
+
+                return NoContent();
+            }
+            catch(ArgumentException ex) 
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch(Exception) 
+            {
+                return StatusCode(500, new { message = "An unexpected error occured. " });
             }
         }
     }
