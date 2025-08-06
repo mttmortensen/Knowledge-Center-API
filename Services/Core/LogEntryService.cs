@@ -75,23 +75,6 @@ namespace Knowledge_Center_API.Services.Core
             return newLogId;
         }
 
-        private void BulkInsertLogEntryTagRelation(int logId, List<int> tagIds)
-        {
-            foreach (int tagId in tagIds)
-            {
-                FieldValidator.ValidateId(tagId, "Tag ID");
-
-                var parameters = new List<SqlParameter>
-                {
-                    new SqlParameter("@LogId", SqlDbType.Int) {Value = logId},
-                    new SqlParameter("@TagId", SqlDbType.Int) {Value = tagId},
-                };
-
-                _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);
-            }
-        }
-
-
         // === UPDATE ===
 
         public List<int> ReplaceTagsOnLog(int logId, List<int> newTagIds)
@@ -259,28 +242,50 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
-        public bool RemoveTagsFromLog(int logId, List<int> tagIdsToRemove)
+        public bool RemoveAllTagsFromLog(int logId)
         {
             FieldValidator.ValidateId(logId, "Log ID");
 
-            // Return early if no tags were provided
-            if (tagIdsToRemove == null || tagIdsToRemove.Count == 0) return false;
+            // We still need to fetch all tags that are on this log
+            var parameters = new List<SqlParameter> { new SqlParameter("@LogId", SqlDbType.Int) { Value = logId } };
+            var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
+
+            if (existingRows.Count == 0) return false;
 
             // Validate the tagId if so
             // Prepare and execute deletion for each Tag relation
-            foreach (int tagId in tagIdsToRemove)
+            foreach (var row in existingRows)
             {
-                FieldValidator.ValidateId(tagId, "Tag ID");
-                var parameters = new List<SqlParameter>
+                int tagId = Convert.ToInt32(row["TagId"]);
+                
+                var deleteParams = new List<SqlParameter>
                 {
                     new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
                     new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
                 };
 
-                _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, parameters);
+                _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, deleteParams);
             }
 
             return true;
+        }
+
+        /* ===================== HELPERS ===================== */
+
+        private void BulkInsertLogEntryTagRelation(int logId, List<int> tagIds)
+        {
+            foreach (int tagId in tagIds)
+            {
+                FieldValidator.ValidateId(tagId, "Tag ID");
+
+                var parameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@LogId", SqlDbType.Int) {Value = logId},
+                    new SqlParameter("@TagId", SqlDbType.Int) {Value = tagId},
+                };
+
+                _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);
+            }
         }
     }
 }
