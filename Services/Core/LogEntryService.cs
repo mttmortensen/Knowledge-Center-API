@@ -184,7 +184,12 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             // Get it's tags
-            var tagRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
+            var tagParams = new List<SqlParameter>
+            {
+                new SqlParameter("@LogId", SqlDbType.Int) { Value = logId }
+            };
+
+            var tagRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, tagParams);
 
             // Add the tags to the log
             foreach (var tag in tagRows)
