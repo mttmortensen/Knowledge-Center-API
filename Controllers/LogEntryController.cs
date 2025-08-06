@@ -164,5 +164,34 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "An unexpected error occured. " });
             }
         }
+
+        /// <summary>
+        /// Deletes all tags from a specific log entry.
+        /// </summary>
+        /// <param name="id">ID of the log entry.</param>
+        /// <returns>204 No Content if successful.</returns>
+        /// <response code="204">Tags deleted successfully.</response>
+        /// <response code="404">Log not found or no tags to delete.</response>
+        /// <response code="500">Server error during tag deletion.</response>
+        [HttpDelete("{id}/tags")]
+        public IActionResult DeleteAllTagsFromLog(int logId) 
+        {
+            try 
+            {
+                var log = _logEntryService.GetLogEntryByLogId(logId);
+                if (log == null)
+                    return NotFound(new { message = $"Log with ID {logId} was not found. " });
+
+                bool result = _logEntryService.DeleteAllLogEntriesByNodeId(logId);
+
+                return result
+                    ? NoContent()
+                    : NotFound(new { message = $"No tags were found on Log ID {logId} to delete. " });
+            }
+            catch(Exception) 
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
     }
 }
