@@ -265,5 +265,30 @@ namespace Knowledge_Center_API.Services.Core
             // Return true to see if DELETE was successful
             return result > 0;
         }
+
+        public bool RemoveTagsFromLog(int logId, List<int> tagIdsToRemove) 
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            // Return early if no tags were provided
+            if (tagIdsToRemove == null || tagIdsToRemove.Count == 0) return false;
+
+            // Validate the tagId if so
+            // Prepare and execute deletion for each Tag relation
+            foreach (int tagId in tagIdsToRemove) 
+            {
+                FieldValidator.ValidateId(tagId, "Tag ID");
+                var parameters = new List<SqlParameter>
+                {
+                    new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
+                    new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                };
+
+                _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, parameters);
+
+            }
+
+            return true;
+        }
     }
 }

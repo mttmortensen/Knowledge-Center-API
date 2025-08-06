@@ -79,5 +79,10 @@ namespace Knowledge_Center_API.DataAccess
             DELETE FROM LogEntries 
             WHERE NodeId = @NodeId;
         ";
+
+        public static readonly string DeleteLogTagRelations = @"
+            DELETE FROM LogTagRelations
+            WHERE LogId = @LogId AND TagId = @TagId;
+        ";
     }
 }
