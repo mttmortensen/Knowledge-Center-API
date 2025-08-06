@@ -43,7 +43,7 @@ namespace Knowledge_Center_API.Services.Core
 
             BulkInsertLogEntryTagRelation(newLogId, dto.TagIds);
 
-            return newLogId; 
+            return newLogId;
         }
 
         private int InsertLogEntry(LogEntry log)
@@ -75,39 +75,9 @@ namespace Knowledge_Center_API.Services.Core
             return newLogId;
         }
 
-        public List<int> AddNewTagsToLog(int logId, List<int> tagIds) 
+        private void BulkInsertLogEntryTagRelation(int logId, List<int> tagIds)
         {
-            // Validate the LogId
-            FieldValidator.ValidateId(logId, "Log ID");
-
-            // Fetch current tagIDs on this log
-            var parameters = new List<SqlParameter> { new SqlParameter(@"LogId", SqlDbType.Int) { Value = logId } };
-            var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
-
-            // Take existing rows and making a hashset for the ints to use in toAdd
-            var existingTagIds = existingRows
-                .Select(r => Convert.ToInt32(r["TagId"]))
-                .ToHashSet();
-
-            // Filter out duplicates
-            var toAdd = existingTagIds
-                .Where(id => !existingTagIds.Contains(id))
-                .Distinct()
-                .ToList();
-
-            // Another round of validation for tag ID
-            foreach(int tagId in toAdd) 
-            {
-                FieldValidator.ValidateId(tagId, "Tag ID");
-                SingleInsertLogEntryTagRelation(logId, tagId);
-            }
-
-            return toAdd;
-        }
-
-        private void BulkInsertLogEntryTagRelation(int logId, List<int> tagIds) 
-        {
-            foreach(int tagId in tagIds) 
+            foreach (int tagId in tagIds)
             {
                 FieldValidator.ValidateId(tagId, "Tag ID");
 
@@ -121,16 +91,39 @@ namespace Knowledge_Center_API.Services.Core
             }
         }
 
-        private void SingleInsertLogEntryTagRelation(int logId, int tagId) 
-        {
-            var parameters = new List<SqlParameter>
-            {
-                new SqlParameter("@LogId", SqlDbType.Int) {Value = logId},
-                new SqlParameter("@TagId", SqlDbType.Int) {Value = tagId},
-            };
 
-            _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);
+        // === UPDATE ===
+
+        public List<int> ReplaceTagsOnLog(int logId, List<int> newTagIds)
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            // Fetch current tagIDs on this log
+            var parameters = new List<SqlParameter> { new SqlParameter("@LogId", SqlDbType.Int) { Value = logId } };
+            var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
+
+            var existingTagIds = existingRows
+                .Select(r => Convert.ToInt32(r["TagId"]))
+                .ToList();
+
+            // Delete existing tag relations one by one using existing query
+            foreach (var tagId in existingTagIds)
+            {
+                var deleteParams = new List<SqlParameter>
+                {
+                    new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
+                    new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                };
+
+                _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, deleteParams);
+            }
+
+            // Insert new tags
+            BulkInsertLogEntryTagRelation(logId, newTagIds ?? new List<int>());
+
+            return newTagIds;
         }
+
 
         // === READ ===
 
@@ -172,7 +165,7 @@ namespace Knowledge_Center_API.Services.Core
                     }).ToList()
                 );
 
-            foreach(var log in logEntries) 
+            foreach (var log in logEntries)
             {
                 if (logTagMap.ContainsKey(log.LogId))
                     log.Tags = logTagMap[log.LogId];
@@ -211,7 +204,7 @@ namespace Knowledge_Center_API.Services.Core
             var tagRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
 
             // Add the tags to the log
-            foreach(var tag in tagRows) 
+            foreach (var tag in tagRows)
             {
                 log.Tags.Add(new Tags
                 {
@@ -266,7 +259,7 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
-        public bool RemoveTagsFromLog(int logId, List<int> tagIdsToRemove) 
+        public bool RemoveTagsFromLog(int logId, List<int> tagIdsToRemove)
         {
             FieldValidator.ValidateId(logId, "Log ID");
 
@@ -275,7 +268,7 @@ namespace Knowledge_Center_API.Services.Core
 
             // Validate the tagId if so
             // Prepare and execute deletion for each Tag relation
-            foreach (int tagId in tagIdsToRemove) 
+            foreach (int tagId in tagIdsToRemove)
             {
                 FieldValidator.ValidateId(tagId, "Tag ID");
                 var parameters = new List<SqlParameter>
@@ -285,7 +278,6 @@ namespace Knowledge_Center_API.Services.Core
                 };
 
                 _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, parameters);
-
             }
 
             return true;
