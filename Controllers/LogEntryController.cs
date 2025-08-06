@@ -132,17 +132,17 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
-        /// Replaces all tags on a specific log entry.
+        /// Adds new tags to a specific log entry without removing existing ones.
         /// </summary>
         /// <param name="logId">ID of the log entry to update.</param>
-        /// <param name="dto">DTO containing the list of new tag IDs.</param>
+        /// <param name="dto">DTO containing the list of tag IDs to add.</param>
         /// <returns>204 No Content if successful.</returns>
-        /// <response code="204">Tags updated successfully.</response>
-        /// <response code="400">Invalid input.</response>
+        /// <response code="204">Tags added successfully.</response>
+        /// <response code="400">Invalid input or tag IDs.</response>
         /// <response code="404">Log not found.</response>
-        /// <response code="500">Server error during update.</response>
-        [HttpPut("{logId}/tags")]
-        public IActionResult ReplaceTags(int logId, [FromBody] LogTagUpdateDto dto) 
+        /// <response code="500">Server error during tag update.</response>
+        [HttpPut("{logId}/tags/")]
+        public IActionResult AddTagsToLog(int logId, [FromBody] LogTagUpdateDto dto) 
         {
             try 
             {
@@ -151,7 +151,10 @@ namespace Knowledge_Center_API.Controllers
                 if (existingLog == null)
                     return NotFound(new { message = $"Log with ID {logId} was not found." });
 
-                _logEntryService.ReplaceTagsOnLog(logId, dto.TagIds);
+                if (dto?.TagIds == null || dto.TagIds.Count == 0)
+                    return BadRequest(new { message = "No tag IDs provided to add." });
+
+                _logEntryService.AddNewTagsToLog(logId, dto.TagIds);
 
                 return NoContent();
             }
