@@ -132,6 +132,43 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
+        /// Updates the Chat URL associated with a specific log entry.
+        /// </summary>
+        /// <param name="logId">The ID of the log entry to update.</param>
+        /// <param name="dto">DTO containing the new Chat URL value.</param>
+        /// <returns>204 No Content if updated successfully.</returns>
+        /// <response code="204">Chat URL updated successfully.</response>
+        /// <response code="400">Invalid input (e.g., missing URL).</response>
+        /// <response code="404">Log entry not found.</response>
+        /// <response code="500">Server error during update.</response>
+        [HttpPut("{logId}/chatURL")]
+        public IActionResult UpdateChatURL(int logId, [FromBody] LogEntryUpdateDto dto) 
+        {
+            try
+            {
+                // Validate log
+                var existingLog = _logEntryService.GetLogEntryByLogId(logId);
+                if (existingLog == null)
+                    return NotFound(new { message = $"Log with ID {logId} was not found." });
+
+                if (string.IsNullOrWhiteSpace(dto.ChatURL))
+                    return BadRequest(new { message = "No Chat URL was provided to update." });
+
+                _logEntryService.UpdateChatURL(logId, dto.ChatURL);
+
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "EXCEPTION: " + ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Adds new tags to a specific log entry without removing existing ones.
         /// </summary>
         /// <param name="logId">ID of the log entry to update.</param>
