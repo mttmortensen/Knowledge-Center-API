@@ -3,13 +3,7 @@ using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Validation;
 using Knowledge_Center_API.DataAccess;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Knowledge_Center_API.Services.Core
 {
@@ -35,6 +29,7 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = dto.NodeId,
                 Content = dto.Content,
                 ContributesToProgress = dto.ContributesToProgress,
+                ChatURL = dto.ChatURL,
                 Tags = new List<Tags>()
             };
 
@@ -61,7 +56,8 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@NodeId", SqlDbType.Int) { Value = log.NodeId },
                 new SqlParameter("@EntryDate", SqlDbType.DateTime) { Value = log.EntryDate },
                 new SqlParameter("@Content", SqlDbType.NVarChar, 2000) { Value = log.Content },
-                new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress }
+                new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress },
+                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) { Value = log.ChatURL }
             };
 
 
@@ -111,6 +107,24 @@ namespace Knowledge_Center_API.Services.Core
             return toAdd;
         }
 
+        public bool UpdateChatURL(int logId, string? chatURL) 
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            var parameters = new List<SqlParameter> 
+            {
+                new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
+                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) 
+                {
+                    Value = string.IsNullOrWhiteSpace(chatURL) ? DBNull.Value : chatURL
+                }
+            };
+
+            int rowsAffected = _database.ExecuteNonQuery(LogEntryQueries.UpdateChatURLByLogId, parameters);
+
+            return rowsAffected > 0;
+        }
+
 
         // === READ ===
 
@@ -132,6 +146,7 @@ namespace Knowledge_Center_API.Services.Core
                     EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                     Content = rawDBRow["Content"].ToString(),
                     ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                    ChatURL = rawDBRow["ChatURL"]?.ToString(),
                     Tags = new() // Placeholder
                 });
             }
@@ -184,6 +199,7 @@ namespace Knowledge_Center_API.Services.Core
                 EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                 Content = rawDBRow["Content"].ToString(),
                 ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                ChatURL = rawDBRow["ChatURL"]?.ToString(),
                 Tags = new List<Tags>()
             };
 
@@ -228,7 +244,8 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = Convert.ToInt32(row["NodeId"]),
                 EntryDate = Convert.ToDateTime(row["EntryDate"]),
                 Content = row["Content"].ToString(),
-                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"])
+                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"]),
+                ChatURL = row["ChatURL"]?.ToString()
             })
             .ToList();
         }
