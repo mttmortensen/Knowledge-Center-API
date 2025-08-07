@@ -3,13 +3,7 @@ using Knowledge_Center_API.Models.DTOs;
 using Knowledge_Center_API.Services.Validation;
 using Knowledge_Center_API.DataAccess;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace Knowledge_Center_API.Services.Core
 {
@@ -111,6 +105,24 @@ namespace Knowledge_Center_API.Services.Core
             }
 
             return toAdd;
+        }
+
+        public bool UpdateChatURL(int logId, string? chatURL) 
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            var parameters = new List<SqlParameter> 
+            {
+                new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
+                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) 
+                {
+                    Value = string.IsNullOrWhiteSpace(chatURL) ? DBNull.Value : chatURL
+                }
+            };
+
+            int rowsAffected = _database.ExecuteNonQuery(LogEntryQueries.UpdateChatURLByLogId, parameters);
+
+            return rowsAffected > 0;
         }
 
 
