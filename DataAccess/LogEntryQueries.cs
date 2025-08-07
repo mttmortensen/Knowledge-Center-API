@@ -11,10 +11,10 @@ namespace Knowledge_Center_API.DataAccess
     {
         public static readonly string InsertLogEntry = @"
             INSERT INTO LogEntries 
-                (NodeId, EntryDate, Content, ContributesToProgress)
+                (NodeId, EntryDate, Content, ContributesToProgress, ChatURL)
             OUTPUT INSERTED.LogId
             VALUES 
-                (@NodeId, @EntryDate, @Content, @ContributesToProgress);
+                (@NodeId, @EntryDate, @Content, @ContributesToProgress, @ChatURL);
         ";
 
         public static readonly string InsertLogTagRelation = @"
@@ -38,7 +38,7 @@ namespace Knowledge_Center_API.DataAccess
         // Removing GetAllLogsWithTags query since now 
         // We are building out the logs and tags in the service layer.
         public static readonly string GetAllLogsWithoutTags = @"
-            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress
+            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress, ChatURL
             FROM LogEntries
             ORDER BY EntryDate DESC;
         ";
@@ -51,15 +51,17 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByLogId = @"
-            SELECT le.LogId, le.NodeId, le.EntryDate, le.Content, le.ContributesToProgress,
-                   le.TagId, t.Name AS TagName
+            SELECT ltr.LogId, le.NodeId, le.EntryDate, le.Content, le.ContributesToProgress, le.ChatURL,
+                   ltr.TagId, t.Name AS TagName
             FROM LogEntries le
-            LEFT JOIN Tags t ON le.TagId = t.TagId
-            WHERE le.LogId = @LogId
+            LEFT JOIN LogTagRelations ltr ON le.LogId = ltr.LogId
+            LEFT JOIN Tags t ON ltr.TagId = t.TagId
+            WHERE le.LogId = @LogId;
         ";
 
+
         public static readonly string GetLogByIdWithoutTags = @"
-            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress
+            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress, ChatURL
             FROM LogEntries
             WHERE LogId = @LogId;
         ";

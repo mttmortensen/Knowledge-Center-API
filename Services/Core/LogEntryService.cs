@@ -35,6 +35,7 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = dto.NodeId,
                 Content = dto.Content,
                 ContributesToProgress = dto.ContributesToProgress,
+                ChatURL = dto.ChatURL,
                 Tags = new List<Tags>()
             };
 
@@ -61,7 +62,8 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@NodeId", SqlDbType.Int) { Value = log.NodeId },
                 new SqlParameter("@EntryDate", SqlDbType.DateTime) { Value = log.EntryDate },
                 new SqlParameter("@Content", SqlDbType.NVarChar, 2000) { Value = log.Content },
-                new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress }
+                new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress },
+                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) { Value = log.ChatURL }
             };
 
 
@@ -132,6 +134,7 @@ namespace Knowledge_Center_API.Services.Core
                     EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                     Content = rawDBRow["Content"].ToString(),
                     ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                    ChatURL = rawDBRow["ChatURL"]?.ToString(),
                     Tags = new() // Placeholder
                 });
             }
@@ -184,6 +187,7 @@ namespace Knowledge_Center_API.Services.Core
                 EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                 Content = rawDBRow["Content"].ToString(),
                 ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
+                ChatURL = rawDBRow["ChatURL"]?.ToString(),
                 Tags = new List<Tags>()
             };
 
@@ -228,7 +232,8 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = Convert.ToInt32(row["NodeId"]),
                 EntryDate = Convert.ToDateTime(row["EntryDate"]),
                 Content = row["Content"].ToString(),
-                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"])
+                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"]),
+                ChatURL = row["ChatURL"]?.ToString()
             })
             .ToList();
         }
