@@ -76,6 +76,12 @@ namespace Knowledge_Center_API.DataAccess
             WHERE lt.LogId = @LogId;
         ";
 
+        public static readonly string UpdateChatURLByLogId = @"
+            UPDATE LogEntries
+            SET ChatURL = @ChatURL
+            WHERE LogId = @LogId;
+        ";
+
 
         public static readonly string DeleteAllLogsByNodeId = @"
             DELETE FROM LogEntries 
