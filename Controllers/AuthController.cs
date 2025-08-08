@@ -1,4 +1,4 @@
-﻿using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.Models.Auth;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;

@@ -1,4 +1,7 @@
-﻿using Knowledge_Center_API.Models;
+﻿using Knowledge_Center_API.Models.Domains;
+using Knowledge_Center_API.Models.KnowledgeNodes;
+using Knowledge_Center_API.Models.LogEntries;
+using Knowledge_Center_API.Models.Tags;
 
 namespace Knowledge_Center_API.DataAccess.Demo
 {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Knowledge_Center_API.Models
+namespace Knowledge_Center_API.Models.Tags
 {
     public class Tags
     {

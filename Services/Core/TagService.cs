@@ -1,8 +1,8 @@
-﻿using Knowledge_Center_API.Models;
-using Knowledge_Center_API.DataAccess;
+﻿using Knowledge_Center_API.DataAccess;
 using Knowledge_Center_API.Services.Validation;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using Knowledge_Center_API.Models.Tags;
 
 
 namespace Knowledge_Center_API.Services.Core

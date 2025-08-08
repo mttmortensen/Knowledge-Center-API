@@ -1,6 +1,12 @@
-﻿namespace Knowledge_Center_API.Models.DTOs
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Knowledge_Center_API.Models.Domains
 {
-    public class DomainWithKNsDto
+    public class Domain
     {
         public int DomainId { get; set; }
         public string DomainName { get; set; }
@@ -9,6 +15,5 @@
         public DateTime CreatedAt { get; set; }
         public DateTime LastUsed { get; set; }
         public DateTime LastUpdated { get; set; }
-        public List<KnowledgeNodeInlineDto> KnowledgeNodes { get; set; }
     }
 }

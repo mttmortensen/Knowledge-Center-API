@@ -1,4 +1,4 @@
-﻿namespace Knowledge_Center_API.Models
+﻿namespace Knowledge_Center_API.Models.Auth
 {
     public class User
     {
