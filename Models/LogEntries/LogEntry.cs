@@ -1,4 +1,6 @@
-﻿namespace Knowledge_Center_API.Models.LogEntries
+﻿using Knowledge_Center_API.Models.TagEntries;
+
+namespace Knowledge_Center_API.Models.LogEntries
 {
     public class LogEntry
     {
