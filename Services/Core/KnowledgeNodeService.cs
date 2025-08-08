@@ -62,10 +62,10 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === READ ===
-        public List<KnowledgeNode> GetAllKnolwedgeNodes()
+        public List<KnowledgeNodeListDto> GetAllKnolwedgeNodes()
         {
             // SELECT Query + Parameters to retrieve all KnowledgeNodes and map results into KnowledgeNode objects
-            List<KnowledgeNode> nodes = new List<KnowledgeNode>();
+            List<KnowledgeNodeListDto> nodes = new List<KnowledgeNodeListDto>();
 
             var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetAllKnowledgeNodes, null);
 
@@ -205,9 +205,9 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
-        private KnowledgeNode ConvertDBRowToKNBaseObj(Dictionary<string, object> rawDBRow)
+        private KnowledgeNodeListDto ConvertDBRowToKNBaseObj(Dictionary<string, object> rawDBRow)
         {
-            return new KnowledgeNode
+            return new KnowledgeNodeListDto
             {
                 Id = Convert.ToInt32(rawDBRow["Id"]),
                 Title = rawDBRow["Title"].ToString(),
@@ -217,7 +217,8 @@ namespace Knowledge_Center_API.Services.Core
                 ConfidenceLevel = Convert.ToInt32(rawDBRow["ConfidenceLevel"]),
                 Status = rawDBRow["Status"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
-                LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"])
+                LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"]),
+                Logs = new List<LogEntryListDto>()
             };
         }
 
