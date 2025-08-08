@@ -7,7 +7,7 @@
      * that will only be attached and appear in a GET by Id logic for 
      * KNs. 
      */
-    public class LogEntryInlineDto
+    public class LogEntryDetailsInlineDto
     {
         public int LogId { get; set; }
         public string Content { get; set; }

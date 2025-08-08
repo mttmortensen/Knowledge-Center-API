@@ -9,7 +9,7 @@ namespace Knowledge_Center_API.Models.KnowledgeNodes
      * So to translate that, I added the LogEntryInline Dto 
      * To this new KN Dto. 
      */
-    public class KnowledgeNodeWithLogsDto
+    public class KnowledgeNodeDetailsWithLogsDto
     {
         public int Id { get; set; }
         public string Title { get; set; }
@@ -21,7 +21,7 @@ namespace Knowledge_Center_API.Models.KnowledgeNodes
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdated { get; set; }
 
-        public List<LogEntryInlineDto> Logs { get; set; }
+        public List<LogEntryDetailsInlineDto> Logs { get; set; }
 
     }
 }
