@@ -46,6 +46,7 @@ namespace Knowledge_Center_API.Services.Core
             // Validate Input Fields 
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
             FieldValidator.ValidateRequiredString(log.Content, "Log Content", 2000);
+            FieldValidator.ValidateOptionalChatURL(log.ChatURL, "Chat URL", 2000);
 
 
             // Set timestamp
@@ -110,6 +111,7 @@ namespace Knowledge_Center_API.Services.Core
         public bool UpdateChatURL(int logId, string? chatURL) 
         {
             FieldValidator.ValidateId(logId, "Log ID");
+            FieldValidator.ValidateOptionalChatURL(chatURL, "Chat URL", 2000);
 
             var parameters = new List<SqlParameter> 
             {

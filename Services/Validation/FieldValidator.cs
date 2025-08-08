@@ -35,5 +35,21 @@ namespace Knowledge_Center_API.Services.Validation
                 throw new ArgumentOutOfRangeException(fieldName, $"Invalid {fieldName}.");
         }
 
+        public static void ValidateOptionalChatURL(string value, string fieldName, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return; // Optional, so allow null/empty
+
+            if (value.Length > maxLength)
+                throw new ArgumentException($"{fieldName} cannot exceed {maxLength} characters.");
+
+            if (!Uri.TryCreate(value, UriKind.Absolute, out Uri? uriResult)
+                || (uriResult.Scheme != Uri.UriSchemeHttp && uriResult.Scheme != Uri.UriSchemeHttps))
+            {
+                throw new ArgumentException($"{fieldName} must be a valid HTTP or HTTPS URL.");
+            }
+        }
+
+
     }
 }
