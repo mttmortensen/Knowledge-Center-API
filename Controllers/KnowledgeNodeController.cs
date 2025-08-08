@@ -1,6 +1,5 @@
 ﻿using Knowledge_Center_API.DataAccess.Demo;
-using Knowledge_Center_API.Models;
-using Knowledge_Center_API.Models.DTOs;
+using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;

@@ -1,4 +1,4 @@
-﻿namespace Knowledge_Center_API.Models.DTOs
+﻿namespace Knowledge_Center_API.Models.LogEntries
 {
 
     /*
