@@ -77,7 +77,7 @@ namespace Knowledge_Center_API.Services.Core
             return nodes;
         }
 
-        public KnowledgeNodeWithLogsDto GetKnowledgeNodeWithLogsById(int id)
+        public KnowledgeNodeDetailsWithLogsDto GetKnowledgeNodeWithLogsById(int id)
         {
             // Validate Inputs Using Validators 
             FieldValidator.ValidateId(id, "KnowledgeNode ID");
@@ -97,13 +97,13 @@ namespace Knowledge_Center_API.Services.Core
 
             // Convert it into the KNwLogs Dto which we'll return 
             // but first need to fetch logs and add them to this dto
-            KnowledgeNodeWithLogsDto nodeDto = ConvertDBRowToKNWithLogsDto(rawDBResults[0]);
+            KnowledgeNodeDetailsWithLogsDto nodeDto = ConvertDBRowToKNWithLogsDto(rawDBResults[0]);
 
             // Fetch Logs
             List<LogEntry> logs = _lgservice.GetLogsForKnowledgeNode(id);
 
             // Adding Logs to Dto
-            nodeDto.Logs = logs.Select(log => new LogEntryInlineDto 
+            nodeDto.Logs = logs.Select(log => new LogEntryDetailsInlineDto 
             {
                 LogId = log.LogId,
                 Content = log.Content,
@@ -123,7 +123,7 @@ namespace Knowledge_Center_API.Services.Core
         // '?' fields
         public bool UpdateKnowledgeNodeFromDto(int nodeId, KnowledgeNodeUpdateDto dto)
         {
-            KnowledgeNodeWithLogsDto existingKNDto = GetKnowledgeNodeWithLogsById(nodeId);
+            KnowledgeNodeDetailsWithLogsDto existingKNDto = GetKnowledgeNodeWithLogsById(nodeId);
             if (existingKNDto == null)
                 return false;
 
@@ -221,9 +221,9 @@ namespace Knowledge_Center_API.Services.Core
             };
         }
 
-        private KnowledgeNodeWithLogsDto ConvertDBRowToKNWithLogsDto(Dictionary<string, object> rawDBRow) 
+        private KnowledgeNodeDetailsWithLogsDto ConvertDBRowToKNWithLogsDto(Dictionary<string, object> rawDBRow) 
         {
-            return new KnowledgeNodeWithLogsDto
+            return new KnowledgeNodeDetailsWithLogsDto
             {
                 Id = Convert.ToInt32(rawDBRow["Id"]),
                 Title = rawDBRow["Title"].ToString(),
@@ -234,7 +234,7 @@ namespace Knowledge_Center_API.Services.Core
                 Status = rawDBRow["Status"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"]),
-                Logs = new List<LogEntryInlineDto>()
+                Logs = new List<LogEntryDetailsInlineDto>()
             };
         }
     }
