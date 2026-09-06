@@ -9,9 +9,10 @@ namespace Knowledge_Center_API.DataAccess
     public static class KnowledgeNodeQueries
     {
         public static readonly string InsertNode = @"
-            INSERT INTO KnowledgeNodes 
+            INSERT INTO KnowledgeNodes
                     (Title, DomainId, NodeType, Description, ConfidenceLevel, Status, CreatedAt, LastUpdated)
-            VALUES 
+            OUTPUT INSERTED.Id
+            VALUES
                     (@Title, @DomainId, @NodeType, @Description, @ConfidenceLevel, @Status, @CreatedAt, @LastUpdated);
         ";
 

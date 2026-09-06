@@ -10,33 +10,41 @@ namespace Knowledge_Center_API.Services.Core
     {
         private readonly Database _db;
 
+        // A precomputed hash with no matching plaintext, used to keep the bcrypt
+        // comparison cost the same when a username isn't found — otherwise a
+        // nonexistent username short-circuits (skips the hash check) while a real
+        // one doesn't, and that timing difference can be used to enumerate usernames.
+        private static readonly string DummyPasswordHash = AuthHelper.HashPassword(Guid.NewGuid().ToString());
+
         public UserService(Database db)
         {
             _db = db;
         }
 
         /* ==== Validate User ==== */
-        public User AuthenticateUser(string username, string password) 
+        public User AuthenticateUser(string username, string password)
         {
-            // Validate Inputs 
+            // Validate Inputs
             FieldValidator.ValidateRequiredString(username, "Username", 100);
             FieldValidator.ValidateRequiredString(password, "Password", 100);
 
             // Query User from DB
-            List<SqlParameter> parameters = new List<SqlParameter> 
+            List<SqlParameter> parameters = new List<SqlParameter>
             {
                 new SqlParameter("@Username", username)
             };
 
-            var result = _db.ExecuteQuery(UserQueries.GerUserByUsername, parameters);
+            var result = _db.ExecuteQuery(UserQueries.GetUserByUsername, parameters);
 
-            if (result.Count == 0)
-                return new User { IsAuthenticated = false };
+            bool userExists = result.Count > 0;
+            var user = userExists ? ConvertDBRowToUser(result[0]) : new User { IsAuthenticated = false };
+            string hashToVerify = userExists ? user.PasswordHash : DummyPasswordHash;
 
-            var user = ConvertDBRowToUser(result[0]);
+            // Always run the bcrypt comparison, even for an unknown username, so the
+            // response time doesn't reveal whether the username exists.
+            bool passwordMatches = AuthHelper.VerifyPassword(password, hashToVerify);
 
-            // Verifying password
-            if (!AuthHelper.VerifyPassword(password, user.PasswordHash)) 
+            if (!userExists || !passwordMatches)
             {
                 user.IsAuthenticated = false;
                 return user;

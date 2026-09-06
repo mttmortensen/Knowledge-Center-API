@@ -35,13 +35,38 @@ namespace Knowledge_Center_API.Services.Security
         public static bool IsAllowed(HttpContext context)
         {
             string ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            string routeKey = $"{context.Request.Method}:{context.Request.Path.Value?.ToLower()}";
-            string key = $"{ip}|{routeKey}";
+            string method = context.Request.Method;
+            string path = context.Request.Path.Value?.ToLower() ?? string.Empty;
 
-            // default limit
-            int limit = LimitsPerRoute.TryGetValue(routeKey, out var val) ? val : 100;
+            // Match against configured route templates by prefix, so routes with an
+            // {id} segment (e.g. "/api/knowledge-nodes/5") still match their template
+            // ("PUT:/api/knowledge-nodes") instead of silently falling back to the
+            // default limit and getting a fresh bucket per distinct id.
+            string matchedRouteKey = null;
+            int limit = 100;
 
-            lock (RequestLog) 
+            foreach (var route in LimitsPerRoute)
+            {
+                int separatorIndex = route.Key.IndexOf(':');
+                string routeMethod = route.Key.Substring(0, separatorIndex);
+                string routePath = route.Key.Substring(separatorIndex + 1);
+
+                if (!string.Equals(routeMethod, method, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (path == routePath || path.StartsWith(routePath + "/"))
+                {
+                    matchedRouteKey = route.Key;
+                    limit = route.Value;
+                    break;
+                }
+            }
+
+            // Bucket by the matched route template (not the raw path) so all requests
+            // to that route share one quota regardless of which id is in the path.
+            string key = $"{ip}|{matchedRouteKey ?? $"{method}:{path}"}";
+
+            lock (RequestLog)
             {
                 if (!RequestLog.ContainsKey(key))
                 {

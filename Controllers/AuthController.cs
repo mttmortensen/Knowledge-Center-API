@@ -106,11 +106,11 @@ namespace Knowledge_Center_API.Controllers
             if(username != null) 
             {
                 AuthSession.EndSession(username);
-                return Ok(new { message = "Logout Successfull. " });
+                return Ok(new { message = "Logout successful." });
             }
 
             // If no matching session found, return unauthorized
-            return Unauthorized(new { messsage = "Invalid Token. " });
+            return Unauthorized(new { message = "Invalid Token. " });
         }
 
         /// <summary>
