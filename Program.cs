@@ -165,17 +165,14 @@ namespace Knowledge_Center_API
             app.UseStaticFiles();
 
             /* =======================================================
-             * SWAGGER UI (Development only)
+             * SWAGGER UI
              * ======================================================= */
-            if (app.Environment.IsDevelopment())
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/kc/swagger/v1/swagger.json", "Knowledge Center API v1");
-                    c.RoutePrefix = "swagger"; // Access at /kc/swagger
-                });
-            }
+                c.SwaggerEndpoint("/kc/swagger/v1/swagger.json", "Knowledge Center API v1");
+                c.RoutePrefix = "swagger"; // Access at /kc/swagger
+            });
 
             /* =======================================================
              * MIDDLEWARE PIPELINE
