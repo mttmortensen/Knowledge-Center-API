@@ -3,7 +3,7 @@ using Knowledge_Center_API.DataAccess;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using Knowledge_Center_API.Models.LogEntries;
-using Knowledge_Center_API.Models.Tags;
+using Knowledge_Center_API.Models.TagEntries;
 
 namespace Knowledge_Center_API.Services.Core
 {
@@ -34,7 +34,7 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             int newLogId = InsertLogEntry(log);
-            if (newLogId > 0) return -1;
+            if (newLogId <= 0) return -1;
 
             BulkInsertLogEntryTagRelation(newLogId, dto.TagIds);
 
@@ -58,7 +58,7 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@EntryDate", SqlDbType.DateTime) { Value = log.EntryDate },
                 new SqlParameter("@Content", SqlDbType.NVarChar, 2000) { Value = log.Content },
                 new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress },
-                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) { Value = log.ChatURL }
+                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) { Value = string.IsNullOrWhiteSpace(log.ChatURL) ? DBNull.Value : log.ChatURL }
             };
 
 

@@ -9,9 +9,10 @@ namespace Knowledge_Center_API.DataAccess
     public static class TagQueries
     {
         public static readonly string InsertTag = @"
-            INSERT INTO Tags 
+            INSERT INTO Tags
                 (Name)
-            VALUES 
+            OUTPUT INSERTED.TagId
+            VALUES
                 (@Name);
         ";
 

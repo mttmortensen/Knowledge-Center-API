@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace Knowledge_Center_API.Services.Security
 {
@@ -27,23 +25,13 @@ namespace Knowledge_Center_API.Services.Security
             // Extract the token portion from "Bearer <token>"
             string token = authHeader.Substring("Bearer ".Length);
 
-            // === Option A: Try to interpret token as a JWT for demo users ===
-            try
-            {
-                // Decode the token without verifying signature (we're just inspecting claims)
-                var handler = new JwtSecurityTokenHandler();
-                var jwt = handler.ReadJwtToken(token);
-
-                // Check for the custom "demo" claim
-                var isDemo = jwt.Claims.Any(c => c.Type == "demo" && c.Value == "true");
-
-                if (isDemo)
-                    return; // Valid demo token — allow access
-            }
-            catch
-            {
-                // Ignore errors and fall back to session token logic
-            }
+            // === Option A: JWT bearer tokens (e.g. demo tokens) ===
+            // The JWT authentication middleware (configured in Program.cs) already ran earlier
+            // in the pipeline and verified the signature/expiry before populating HttpContext.User.
+            // A request only reaches here as "authenticated" if that verification succeeded, so we
+            // can trust it directly instead of re-parsing the token ourselves without checking its signature.
+            if (context.HttpContext.User.Identity?.IsAuthenticated == true)
+                return;
 
             // === Option B: Fallback to session token validation for real users ===
             if (!AuthSession.IsValidToken(token))

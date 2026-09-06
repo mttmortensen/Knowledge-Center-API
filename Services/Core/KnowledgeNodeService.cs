@@ -54,15 +54,17 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@NodeType", SqlDbType.NVarChar, 20) { Value = node.NodeType }
             };
 
-            // Run the INSERT query
-            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.InsertNode, parameters);
+            // Run the INSERT query and capture the DB-generated id
+            int newNodeId = _database.ExecuteScalar<int>(KnowledgeNodeQueries.InsertNode, parameters);
+            if (newNodeId <= 0)
+                return false;
 
-            // Return true to see if INSERT was successful
-            return result > 0;
+            node.Id = newNodeId;
+            return true;
         }
 
         // === READ ===
-        public List<KnowledgeNodeListDto> GetAllKnolwedgeNodes()
+        public List<KnowledgeNodeListDto> GetAllKnowledgeNodes()
         {
             // SELECT Query + Parameters to retrieve all KnowledgeNodes and map results into KnowledgeNode objects
             List<KnowledgeNodeListDto> nodes = new List<KnowledgeNodeListDto>();

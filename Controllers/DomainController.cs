@@ -108,7 +108,7 @@ namespace Knowledge_Center_API.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "An unexpected error occured" });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 
@@ -151,7 +151,7 @@ namespace Knowledge_Center_API.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "An unexpected error occured" });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 

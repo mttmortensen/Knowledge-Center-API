@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -33,6 +34,22 @@ namespace Knowledge_Center_API
             builder.Services.AddScoped<Services.Core.LogEntryService>();
             builder.Services.AddScoped<Services.Core.TagService>();
             builder.Services.AddScoped<Services.Core.UserService>();
+
+            /* =======================================================
+             * FORWARDED HEADERS (reverse proxy)
+             * Without this, Connection.RemoteIpAddress is always the proxy's
+             * own IP, which breaks per-client rate limiting.
+             * ======================================================= */
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                // The reverse proxy isn't on a fixed, known address, so clear the default
+                // known-proxy allowlist. Only do this because the app is not directly
+                // internet-facing (it always sits behind our proxy) — if that ever
+                // changes, restrict KnownProxies/KnownNetworks instead of clearing them.
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
 
             /* =======================================================
              * CORS CONFIGURATION
@@ -135,6 +152,9 @@ namespace Knowledge_Center_API
              * ======================================================= */
             var app = builder.Build();
 
+            // Must run before anything that reads the connection/scheme (rate limiting, HTTPS redirection, etc.)
+            app.UseForwardedHeaders();
+
             // Base Path for API (reverse proxy scenario)
             app.UsePathBase("/kc");
             app.Use((context, next) =>
@@ -145,14 +165,17 @@ namespace Knowledge_Center_API
             app.UseStaticFiles();
 
             /* =======================================================
-             * SWAGGER UI
+             * SWAGGER UI (Development only)
              * ======================================================= */
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
+            if (app.Environment.IsDevelopment())
             {
-                c.SwaggerEndpoint("/kc/swagger/v1/swagger.json", "Knowledge Center API v1");
-                c.RoutePrefix = "swagger"; // Access at /kc/swagger
-            });
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/kc/swagger/v1/swagger.json", "Knowledge Center API v1");
+                    c.RoutePrefix = "swagger"; // Access at /kc/swagger
+                });
+            }
 
             /* =======================================================
              * MIDDLEWARE PIPELINE

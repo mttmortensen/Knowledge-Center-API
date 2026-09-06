@@ -45,11 +45,13 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@LastUsed", SqlDbType.DateTime) { Value = domain.LastUsed }
             };
 
-            // Run the INSERT query
-            int result = _database.ExecuteNonQuery(DomainQueries.InsertDomain, parameters);
+            // Run the INSERT query and capture the DB-generated id
+            int newDomainId = _database.ExecuteScalar<int>(DomainQueries.InsertDomain, parameters);
+            if (newDomainId <= 0)
+                return false;
 
-            // Return true to see if INSERT was successful
-            return result > 0;
+            domain.DomainId = newDomainId;
+            return true;
         }
 
         // === READ ===

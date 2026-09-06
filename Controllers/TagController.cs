@@ -1,5 +1,5 @@
 ﻿using Knowledge_Center_API.DataAccess.Demo;
-using Knowledge_Center_API.Models.Tags;
+using Knowledge_Center_API.Models.TagEntries;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +55,7 @@ namespace Knowledge_Center_API.Controllers
                 Tags demoTag = DemoData.Tags.FirstOrDefault(tg => tg.TagId == id);
 
                 if (demoTag == null)
-                    return NotFound($"Demo Log Entry with ID {id} is not found");
+                    return NotFound($"Demo Tag with ID {id} is not found");
 
                 return Ok(demoTag);
             }
@@ -107,7 +107,7 @@ namespace Knowledge_Center_API.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "An unexpected error occured" });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 
@@ -150,7 +150,7 @@ namespace Knowledge_Center_API.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "An unexpected error occured" });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 

@@ -126,7 +126,7 @@ namespace Knowledge_Center_API.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, new { message = "An unexpected error occured" });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 
@@ -141,8 +141,20 @@ namespace Knowledge_Center_API.Controllers
         /// <response code="404">Log entry not found.</response>
         /// <response code="500">Server error during update.</response>
         [HttpPut("{logId}/chatURL")]
-        public IActionResult UpdateChatURL(int logId, [FromBody] LogEntryUpdateDto dto) 
+        public IActionResult UpdateChatURL(int logId, [FromBody] LogEntryUpdateDto dto)
         {
+            // Demo mode: Updating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Update operations are disabled in demo mode.");
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             try
             {
                 // Validate log
@@ -161,9 +173,9 @@ namespace Knowledge_Center_API.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = "EXCEPTION: " + ex.Message });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 
@@ -177,10 +189,22 @@ namespace Knowledge_Center_API.Controllers
         /// <response code="400">Invalid input or tag IDs.</response>
         /// <response code="404">Log not found.</response>
         /// <response code="500">Server error during tag update.</response>
-        [HttpPut("{logId}/tags/")]
-        public IActionResult AddTagsToLog(int logId, [FromBody] LogTagUpdateDto dto) 
+        [HttpPut("{logId}/tags")]
+        public IActionResult AddTagsToLog(int logId, [FromBody] LogTagUpdateDto dto)
         {
-            try 
+            // Demo mode: Updating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Update operations are disabled in demo mode.");
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
             {
                 // Validate log
                 var existingLog = _logEntryService.GetLogEntryByLogId(logId);
@@ -194,13 +218,13 @@ namespace Knowledge_Center_API.Controllers
 
                 return NoContent();
             }
-            catch(ArgumentException ex) 
+            catch(ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch(Exception ex) 
+            catch(Exception)
             {
-                return StatusCode(500, new { message = "EXCEPTION: " + ex.Message });
+                return StatusCode(500, new { message = "An unexpected error occurred." });
             }
         }
 
@@ -213,15 +237,27 @@ namespace Knowledge_Center_API.Controllers
         /// <response code="404">Log not found or no tags to delete.</response>
         /// <response code="500">Server error during tag deletion.</response>
         [HttpDelete("{logId}/tags")]
-        public IActionResult DeleteAllTagsFromLog(int logId) 
+        public IActionResult DeleteAllTagsFromLog(int logId)
         {
-            try 
+            // Demo mode: Deleting is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Deleting operations are disabled in demo mode.");
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
             {
                 var log = _logEntryService.GetLogEntryByLogId(logId);
                 if (log == null)
                     return NotFound(new { message = $"Log with ID {logId} was not found. " });
 
-                bool result = _logEntryService.DeleteAllLogEntriesByNodeId(logId);
+                bool result = _logEntryService.RemoveAllTagsFromLog(logId);
 
                 return result
                     ? NoContent()
@@ -244,8 +280,20 @@ namespace Knowledge_Center_API.Controllers
         /// <response code="404">Log not found.</response>
         /// <response code="500">Server error during tag deletion.</response>
         [HttpDelete("{logId}/tags/specific")]
-        public IActionResult DeleteSpecificTagsFromLog(int logId, [FromBody] LogTagDeleteDto dto) 
+        public IActionResult DeleteSpecificTagsFromLog(int logId, [FromBody] LogTagDeleteDto dto)
         {
+            // Demo mode: Deleting is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return Forbid("Deleting operations are disabled in demo mode.");
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
             try
             {
                 var log = _logEntryService.GetLogEntryByLogId(logId);

@@ -2,7 +2,7 @@
 using Knowledge_Center_API.Services.Validation;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using Knowledge_Center_API.Models.Tags;
+using Knowledge_Center_API.Models.TagEntries;
 
 
 namespace Knowledge_Center_API.Services.Core
@@ -29,11 +29,13 @@ namespace Knowledge_Center_API.Services.Core
                 new SqlParameter("@Name", SqlDbType.NVarChar, 100) { Value = tag.Name }
             };
 
-            // Run the INSERT Query
-            int result = _db.ExecuteNonQuery(TagQueries.InsertTag, tagParameters);
+            // Run the INSERT Query and capture the DB-generated id
+            int newTagId = _db.ExecuteScalar<int>(TagQueries.InsertTag, tagParameters);
+            if (newTagId <= 0)
+                return false;
 
-            // Return true to see if INSERT was successful
-            return result > 0;
+            tag.TagId = newTagId;
+            return true;
         }
 
         // Read

@@ -9,9 +9,10 @@ namespace Knowledge_Center_API.DataAccess
     public static class DomainQueries
     {
         public static readonly string InsertDomain = @"
-            INSERT INTO Domains 
+            INSERT INTO Domains
                 (DomainName, DomainDescription, DomainStatus, CreatedAt, LastUsed)
-            VALUES 
+            OUTPUT INSERTED.DomainId
+            VALUES
                 (@DomainName, @DomainDescription, @DomainStatus, @CreatedAt, @LastUsed);
         ";
 
