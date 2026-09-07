@@ -60,9 +60,10 @@ namespace Knowledge_Center_API
                 options.AddPolicy(name: KCFrontendCors, policy =>
                 {
                     policy.WithOrigins(
-                        "https://kc.mortensens.xyz",
+                        "https://kc.mortensens.cc",
                         "http://localhost:8081",
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "http://localhost:5173"
                     )
                     .AllowAnyHeader()
                     .AllowAnyMethod()
