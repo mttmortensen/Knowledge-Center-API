@@ -1,5 +1,6 @@
 ﻿using Knowledge_Center_API.DataAccess.Demo;
 using Knowledge_Center_API.Models.Domains;
+using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +57,34 @@ namespace Knowledge_Center_API.Controllers
                 if (demoDomain == null)
                     return NotFound($"Demo domain with ID {id} is not found");
 
-                return Ok(demoDomain);
+                // Nest this domain's demo knowledge nodes, matching the shape
+                // the real endpoint returns (DomainWithKNsDto) — otherwise the
+                // frontend's domain detail page has nothing to list.
+                var demoKNs = DemoData.KnowledgeNodes
+                    .Where(kn => kn.DomainId == id)
+                    .Select(kn => new KnowledgeNodeInlineDto
+                    {
+                        Id = kn.Id,
+                        Title = kn.Title,
+                        NodeType = kn.NodeType,
+                        ConfidenceLevel = kn.ConfidenceLevel,
+                        Status = kn.Status,
+                        CreatedAt = kn.CreatedAt,
+                        LastUpdated = kn.LastUpdated
+                    })
+                    .ToList();
+
+                return Ok(new DomainWithKNsDto
+                {
+                    DomainId = demoDomain.DomainId,
+                    DomainName = demoDomain.DomainName,
+                    DomainDescription = demoDomain.DomainDescription,
+                    DomainStatus = demoDomain.DomainStatus,
+                    CreatedAt = demoDomain.CreatedAt,
+                    LastUsed = demoDomain.LastUsed,
+                    LastUpdated = demoDomain.LastUpdated,
+                    KnowledgeNodes = demoKNs
+                });
             }
 
             var domain = _domainService.GetDomainByIdWithKNs(id);

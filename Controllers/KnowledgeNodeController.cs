@@ -1,5 +1,6 @@
 ﻿using Knowledge_Center_API.DataAccess.Demo;
 using Knowledge_Center_API.Models.KnowledgeNodes;
+using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +57,35 @@ namespace Knowledge_Center_API.Controllers
                 if (demoKN == null)
                     return NotFound($"Demo Knowledge Node with ID {id} is not found");
 
-                return Ok(demoKN);
+                // Nest this node's demo log entries, matching the shape the real
+                // endpoint returns (KnowledgeNodeDetailsWithLogsDto) — otherwise
+                // the frontend's node detail page has nothing to list.
+                var demoLogs = DemoData.LogEntries
+                    .Where(log => log.NodeId == id)
+                    .Select(log => new LogEntryDetailsInlineDto
+                    {
+                        LogId = log.LogId,
+                        Title = log.Title,
+                        Content = log.Content,
+                        EntryDate = log.EntryDate,
+                        ContributesToProgress = log.ContributesToProgress,
+                        ChatURL = log.ChatURL
+                    })
+                    .ToList();
+
+                return Ok(new KnowledgeNodeDetailsWithLogsDto
+                {
+                    Id = demoKN.Id,
+                    Title = demoKN.Title,
+                    DomainId = demoKN.DomainId,
+                    NodeType = demoKN.NodeType,
+                    Description = demoKN.Description,
+                    ConfidenceLevel = demoKN.ConfidenceLevel,
+                    Status = demoKN.Status,
+                    CreatedAt = demoKN.CreatedAt,
+                    LastUpdated = demoKN.LastUpdated,
+                    Logs = demoLogs
+                });
             }
 
             var node = _knowledgeNodeService.GetKnowledgeNodeWithLogsById(id);
