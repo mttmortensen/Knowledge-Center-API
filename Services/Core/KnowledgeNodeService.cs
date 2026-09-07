@@ -2,10 +2,10 @@
 using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Services.Validation;
-using Microsoft.Data.SqlClient;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,16 +42,16 @@ namespace Knowledge_Center_API.Services.Core
             node.LastUpdated = now;
 
             // Build SQL Parameters
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@Title", SqlDbType.NVarChar, 100) { Value = node.Title },
-                new SqlParameter("@DomainId", SqlDbType.Int) { Value = node.DomainId },
-                new SqlParameter("@Description", SqlDbType.NVarChar, 500) { Value = node.Description },
-                new SqlParameter("@ConfidenceLevel", SqlDbType.Int) { Value = node.ConfidenceLevel },
-                new SqlParameter("@Status", SqlDbType.NVarChar, 20) { Value = node.Status },
-                new SqlParameter("@CreatedAt", SqlDbType.DateTime) { Value = node.CreatedAt },
-                new SqlParameter("@LastUpdated", SqlDbType.DateTime) { Value = node.LastUpdated },
-                new SqlParameter("@NodeType", SqlDbType.NVarChar, 20) { Value = node.NodeType }
+                new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 100) { Value = node.Title },
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = node.DomainId },
+                new NpgsqlParameter("@Description", NpgsqlDbType.Varchar, 500) { Value = node.Description },
+                new NpgsqlParameter("@ConfidenceLevel", NpgsqlDbType.Integer) { Value = node.ConfidenceLevel },
+                new NpgsqlParameter("@Status", NpgsqlDbType.Varchar, 20) { Value = node.Status },
+                new NpgsqlParameter("@CreatedAt", NpgsqlDbType.Timestamp) { Value = node.CreatedAt },
+                new NpgsqlParameter("@LastUpdated", NpgsqlDbType.Timestamp) { Value = node.LastUpdated },
+                new NpgsqlParameter("@NodeType", NpgsqlDbType.Varchar, 20) { Value = node.NodeType }
             };
 
             // Run the INSERT query and capture the DB-generated id
@@ -85,9 +85,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(id, "KnowledgeNode ID");
 
             // Fetch Raw KN Data
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@Id", id )
+                new NpgsqlParameter("@Id", id )
             };
 
             var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, parameters);
@@ -169,16 +169,16 @@ namespace Knowledge_Center_API.Services.Core
             node.LastUpdated = DateTime.Now;
 
             // === Strictly Typed SQL Parameters ===
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@Id", SqlDbType.Int) { Value = node.Id },
-                new SqlParameter("@Title", SqlDbType.NVarChar, 100) { Value = node.Title },
-                new SqlParameter("@DomainId", SqlDbType.Int) { Value = node.DomainId },
-                new SqlParameter("@NodeType", SqlDbType.NVarChar, 20) { Value = node.NodeType },
-                new SqlParameter("@Description", SqlDbType.NVarChar, 500) { Value = node.Description },
-                new SqlParameter("@ConfidenceLevel", SqlDbType.Int) { Value = node.ConfidenceLevel },
-                new SqlParameter("@Status", SqlDbType.NVarChar, 20) { Value = node.Status },
-                new SqlParameter("@LastUpdated", SqlDbType.DateTime) { Value = node.LastUpdated }
+                new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = node.Id },
+                new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 100) { Value = node.Title },
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = node.DomainId },
+                new NpgsqlParameter("@NodeType", NpgsqlDbType.Varchar, 20) { Value = node.NodeType },
+                new NpgsqlParameter("@Description", NpgsqlDbType.Varchar, 500) { Value = node.Description },
+                new NpgsqlParameter("@ConfidenceLevel", NpgsqlDbType.Integer) { Value = node.ConfidenceLevel },
+                new NpgsqlParameter("@Status", NpgsqlDbType.Varchar, 20) { Value = node.Status },
+                new NpgsqlParameter("@LastUpdated", NpgsqlDbType.Timestamp) { Value = node.LastUpdated }
             };
 
             int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.UpdateKnowledgeNode, parameters);
@@ -195,9 +195,9 @@ namespace Knowledge_Center_API.Services.Core
 
 
             // DELETE Query + Parameters to delete a KnowledgeNode by ID
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@Id", id)
+                new NpgsqlParameter("@Id", id)
             };
 
             int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.DeleteKnowledgeNode, parameters);

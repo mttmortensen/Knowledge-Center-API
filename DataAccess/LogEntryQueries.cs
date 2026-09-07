@@ -1,4 +1,4 @@
-﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,87 +10,87 @@ namespace Knowledge_Center_API.DataAccess
     public class LogEntryQueries
     {
         public static readonly string InsertLogEntry = @"
-            INSERT INTO LogEntries 
-                (NodeId, EntryDate, Content, ContributesToProgress, ChatURL)
-            OUTPUT INSERTED.LogId
-            VALUES 
-                (@NodeId, @EntryDate, @Content, @ContributesToProgress, @ChatURL);
+            INSERT INTO ""LogEntries""
+                (""NodeId"", ""EntryDate"", ""Content"", ""ContributesToProgress"", ""ChatURL"")
+            VALUES
+                (@NodeId, @EntryDate, @Content, @ContributesToProgress, @ChatURL)
+            RETURNING ""LogId"";
         ";
 
         public static readonly string InsertLogTagRelation = @"
-            INSERT INTO LogEntryTags (LogId, TagId)
+            INSERT INTO ""LogEntryTags"" (""LogId"", ""TagId"")
             VALUES (@LogId, @TagId);
         ";
 
 
         public static readonly string GetLogsByNodeId = @"
-            SELECT * FROM LogEntries 
-            WHERE NodeId = @NodeId
-            ORDER BY EntryDate DESC;
+            SELECT * FROM ""LogEntries""
+            WHERE ""NodeId"" = @NodeId
+            ORDER BY ""EntryDate"" DESC;
         ";
 
         public static readonly string GetAllLogs = @"
-            SELECT * FROM LogEntries 
-            ORDER BY EntryDate DESC;
+            SELECT * FROM ""LogEntries""
+            ORDER BY ""EntryDate"" DESC;
         ";
 
 
-        // Removing GetAllLogsWithTags query since now 
+        // Removing GetAllLogsWithTags query since now
         // We are building out the logs and tags in the service layer.
         public static readonly string GetAllLogsWithoutTags = @"
-            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress, ChatURL
-            FROM LogEntries
-            ORDER BY EntryDate DESC;
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Content"", ""ContributesToProgress"", ""ChatURL""
+            FROM ""LogEntries""
+            ORDER BY ""EntryDate"" DESC;
         ";
 
         public static readonly string GetAllLogTagRelations = @"
-            SELECT lt.LogId, t.TagId, t.Name AS TagName
-            FROM LogEntryTags lt
-            INNER JOIN Tags t ON lt.TagId = t.TagId;
+            SELECT lt.""LogId"", t.""TagId"", t.""Name"" AS ""TagName""
+            FROM ""LogEntryTags"" lt
+            INNER JOIN ""Tags"" t ON lt.""TagId"" = t.""TagId"";
         ";
 
 
         public static readonly string GetLogByLogId = @"
-            SELECT ltr.LogId, le.NodeId, le.EntryDate, le.Content, le.ContributesToProgress, le.ChatURL,
-                   ltr.TagId, t.Name AS TagName
-            FROM LogEntries le
-            LEFT JOIN LogTagRelations ltr ON le.LogId = ltr.LogId
-            LEFT JOIN Tags t ON ltr.TagId = t.TagId
-            WHERE le.LogId = @LogId;
+            SELECT ltr.""LogId"", le.""NodeId"", le.""EntryDate"", le.""Content"", le.""ContributesToProgress"", le.""ChatURL"",
+                   ltr.""TagId"", t.""Name"" AS ""TagName""
+            FROM ""LogEntries"" le
+            LEFT JOIN ""LogTagRelations"" ltr ON le.""LogId"" = ltr.""LogId""
+            LEFT JOIN ""Tags"" t ON ltr.""TagId"" = t.""TagId""
+            WHERE le.""LogId"" = @LogId;
         ";
 
 
         public static readonly string GetLogByIdWithoutTags = @"
-            SELECT LogId, NodeId, EntryDate, Content, ContributesToProgress, ChatURL
-            FROM LogEntries
-            WHERE LogId = @LogId;
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Content"", ""ContributesToProgress"", ""ChatURL""
+            FROM ""LogEntries""
+            WHERE ""LogId"" = @LogId;
         ";
 
         public static readonly string GetLogTagRelationsByLogId = @"
-            SELECT lt.LogId,
-                   t.TagId,
-                   t.Name AS TagName
-            FROM LogEntryTags lt
-            INNER JOIN Tags t
-                ON lt.TagId = t.TagId
-            WHERE lt.LogId = @LogId;
+            SELECT lt.""LogId"",
+                   t.""TagId"",
+                   t.""Name"" AS ""TagName""
+            FROM ""LogEntryTags"" lt
+            INNER JOIN ""Tags"" t
+                ON lt.""TagId"" = t.""TagId""
+            WHERE lt.""LogId"" = @LogId;
         ";
 
         public static readonly string UpdateChatURLByLogId = @"
-            UPDATE LogEntries
-            SET ChatURL = @ChatURL
-            WHERE LogId = @LogId;
+            UPDATE ""LogEntries""
+            SET ""ChatURL"" = @ChatURL
+            WHERE ""LogId"" = @LogId;
         ";
 
 
         public static readonly string DeleteAllLogsByNodeId = @"
-            DELETE FROM LogEntries 
-            WHERE NodeId = @NodeId;
+            DELETE FROM ""LogEntries""
+            WHERE ""NodeId"" = @NodeId;
         ";
 
         public static readonly string DeleteLogTagRelations = @"
-            DELETE FROM LogEntryTags
-            WHERE LogId = @LogId AND TagId = @TagId;
+            DELETE FROM ""LogEntryTags""
+            WHERE ""LogId"" = @LogId AND ""TagId"" = @TagId;
         ";
     }
 }

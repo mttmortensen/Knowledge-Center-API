@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,31 +9,31 @@ namespace Knowledge_Center_API.DataAccess
     public static class TagQueries
     {
         public static readonly string InsertTag = @"
-            INSERT INTO Tags
-                (Name)
-            OUTPUT INSERTED.TagId
+            INSERT INTO ""Tags""
+                (""Name"")
             VALUES
-                (@Name);
+                (@Name)
+            RETURNING ""TagId"";
         ";
 
         public static readonly string GetAllTags = @"
-            SELECT * FROM Tags;
+            SELECT * FROM ""Tags"";
         ";
 
         public static readonly string GetTagById = @"
-            SELECT * FROM Tags 
-            WHERE TagId = @TagId;
+            SELECT * FROM ""Tags""
+            WHERE ""TagId"" = @TagId;
         ";
 
         public static readonly string UpdateTag = @"
-            UPDATE Tags 
-            SET Name = @Name
-            WHERE TagId = @TagId;   
+            UPDATE ""Tags""
+            SET ""Name"" = @Name
+            WHERE ""TagId"" = @TagId;
         ";
 
         public static readonly string DeleteTag = @"
-            DELETE FROM Tags 
-            WHERE TagId = @TagId;
+            DELETE FROM ""Tags""
+            WHERE ""TagId"" = @TagId;
         ";
     }
 }

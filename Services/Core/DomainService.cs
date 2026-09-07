@@ -2,10 +2,10 @@
 using Knowledge_Center_API.Models.Domains;
 using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Services.Validation;
-using Microsoft.Data.SqlClient;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,13 +36,13 @@ namespace Knowledge_Center_API.Services.Core
             domain.LastUsed = now;
 
             // Build SQL Parameters
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@DomainName", SqlDbType.NVarChar, 100) { Value = domain.DomainName },
-                new SqlParameter("@DomainDescription", SqlDbType.NVarChar, 300) { Value = domain.DomainDescription ?? string.Empty },
-                new SqlParameter("@DomainStatus", SqlDbType.NVarChar, 20) { Value = domain.DomainStatus },
-                new SqlParameter("@CreatedAt", SqlDbType.DateTime) { Value = domain.CreatedAt },
-                new SqlParameter("@LastUsed", SqlDbType.DateTime) { Value = domain.LastUsed }
+                new NpgsqlParameter("@DomainName", NpgsqlDbType.Varchar, 100) { Value = domain.DomainName },
+                new NpgsqlParameter("@DomainDescription", NpgsqlDbType.Varchar, 300) { Value = domain.DomainDescription ?? string.Empty },
+                new NpgsqlParameter("@DomainStatus", NpgsqlDbType.Varchar, 20) { Value = domain.DomainStatus },
+                new NpgsqlParameter("@CreatedAt", NpgsqlDbType.Timestamp) { Value = domain.CreatedAt },
+                new NpgsqlParameter("@LastUsed", NpgsqlDbType.Timestamp) { Value = domain.LastUsed }
             };
 
             // Run the INSERT query and capture the DB-generated id
@@ -73,9 +73,9 @@ namespace Knowledge_Center_API.Services.Core
         {
             FieldValidator.ValidateId(id, "Domain ID");
 
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@DomainId", id)
+                new NpgsqlParameter("@DomainId", id)
             };
 
             var rawDBResults = _database.ExecuteQuery(DomainQueries.GetDomainById, parameters);
@@ -107,9 +107,9 @@ namespace Knowledge_Center_API.Services.Core
 
         private List<KnowledgeNode> GetKnowledgeNodesForDomain(int domainId)
         {
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@DomainId", domainId)
+                new NpgsqlParameter("@DomainId", domainId)
             };
 
             var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodesByDomainId, parameters);
@@ -136,9 +136,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(domainId, "Domain ID");
 
             // Build SQL Parameters
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@DomainId", SqlDbType.Int) { Value = domainId }
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId }
             };
 
             // SELECT Query + Parameters to retrieve a single Domain and map results into Domain object
@@ -184,13 +184,13 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateEnumValue(domain.DomainStatus, "Domain Status", new() { "Active", "Inactive" });
 
             // Build SQL Parameters
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@DomainId", SqlDbType.Int) { Value = domain.DomainId },
-                new SqlParameter("@DomainName", SqlDbType.NVarChar, 100) { Value = domain.DomainName },
-                new SqlParameter("@DomainDescription", SqlDbType.NVarChar, 300) { Value = domain.DomainDescription ?? string.Empty },
-                new SqlParameter("@DomainStatus", SqlDbType.NVarChar, 20) { Value = domain.DomainStatus },
-                new SqlParameter("@LastUsed", SqlDbType.DateTime) { Value = domain.LastUsed }
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domain.DomainId },
+                new NpgsqlParameter("@DomainName", NpgsqlDbType.Varchar, 100) { Value = domain.DomainName },
+                new NpgsqlParameter("@DomainDescription", NpgsqlDbType.Varchar, 300) { Value = domain.DomainDescription ?? string.Empty },
+                new NpgsqlParameter("@DomainStatus", NpgsqlDbType.Varchar, 20) { Value = domain.DomainStatus },
+                new NpgsqlParameter("@LastUsed", NpgsqlDbType.Timestamp) { Value = domain.LastUsed }
             };
 
             // Run the UPDATE query
@@ -207,9 +207,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(domainId, "Domain ID");
 
             // Build SQL Parameters
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-               new SqlParameter("@DomainId", SqlDbType.Int) { Value = domainId }
+               new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId }
             };
 
             // Run the DELETE query

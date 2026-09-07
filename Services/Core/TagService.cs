@@ -1,7 +1,7 @@
 ﻿using Knowledge_Center_API.DataAccess;
 using Knowledge_Center_API.Services.Validation;
-using Microsoft.Data.SqlClient;
-using System.Data;
+using Npgsql;
+using NpgsqlTypes;
 using Knowledge_Center_API.Models.TagEntries;
 
 
@@ -24,9 +24,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateRequiredString(tag.Name, "Tag Name", 100);
 
             //Build SQL Parameters
-            List<SqlParameter> tagParameters = new List<SqlParameter>
+            List<NpgsqlParameter> tagParameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@Name", SqlDbType.NVarChar, 100) { Value = tag.Name }
+                new NpgsqlParameter("@Name", NpgsqlDbType.Varchar, 100) { Value = tag.Name }
             };
 
             // Run the INSERT Query and capture the DB-generated id
@@ -61,9 +61,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(tagId, "Tag ID");
 
             // Build SQL Parameters
-            List<SqlParameter> tagParameters = new List<SqlParameter>
+            List<NpgsqlParameter> tagParameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) { Value = tagId }
             };
 
             // Execute the SELECT query to get a specific tag by ID
@@ -84,10 +84,10 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateRequiredString(tag.Name, "Tag Name", 100);
 
             // Build SQL Parameters
-            List<SqlParameter> tagParameters = new List<SqlParameter>
+            List<NpgsqlParameter> tagParameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@TagId", SqlDbType.Int) { Value = tag.TagId },
-                new SqlParameter("@Name", SqlDbType.NVarChar, 100) { Value = tag.Name }
+                new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) { Value = tag.TagId },
+                new NpgsqlParameter("@Name", NpgsqlDbType.Varchar, 100) { Value = tag.Name }
             };
 
             // Run the UPDATE Query
@@ -104,9 +104,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(tagId, "Tag ID");
 
             // Build SQL Parameters
-            List<SqlParameter> tagParameters = new List<SqlParameter>
+            List<NpgsqlParameter> tagParameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) { Value = tagId }
             };
 
             // Run the DELETE Query
