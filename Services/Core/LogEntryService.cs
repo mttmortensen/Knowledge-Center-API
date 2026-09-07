@@ -27,6 +27,7 @@ namespace Knowledge_Center_API.Services.Core
             var log = new LogEntry
             {
                 NodeId = dto.NodeId,
+                Title = dto.Title,
                 Content = dto.Content,
                 ContributesToProgress = dto.ContributesToProgress,
                 ChatURL = dto.ChatURL,
@@ -43,9 +44,14 @@ namespace Knowledge_Center_API.Services.Core
 
         private int InsertLogEntry(LogEntry log)
         {
-            // Validate Input Fields 
+            // Validate Input Fields
+            // Content limit raised well past the old 2000-char cap: entries are now
+            // full markdown docs/guides authored in a rich editor, not short log lines.
+            // "Content" is a Postgres TEXT column (unbounded), so the parameter below
+            // uses NpgsqlDbType.Text rather than a length-limited Varchar.
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
-            FieldValidator.ValidateRequiredString(log.Content, "Log Content", 2000);
+            FieldValidator.ValidateRequiredString(log.Content, "Log Content", 200_000);
+            FieldValidator.ValidateOptionalString(log.Title, "Title", 200);
             FieldValidator.ValidateOptionalChatURL(log.ChatURL, "Chat URL", 2000);
 
 
@@ -56,7 +62,8 @@ namespace Knowledge_Center_API.Services.Core
             {
                 new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = log.NodeId },
                 new NpgsqlParameter("@EntryDate", NpgsqlDbType.Timestamp) { Value = log.EntryDate },
-                new NpgsqlParameter("@Content", NpgsqlDbType.Varchar, 2000) { Value = log.Content },
+                new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(log.Title) ? DBNull.Value : log.Title },
+                new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = log.Content },
                 new NpgsqlParameter("@ContributesToProgress", NpgsqlDbType.Boolean) { Value = log.ContributesToProgress },
                 new NpgsqlParameter("@ChatURL", NpgsqlDbType.Varchar, 2000) { Value = string.IsNullOrWhiteSpace(log.ChatURL) ? DBNull.Value : log.ChatURL }
             };
@@ -108,7 +115,35 @@ namespace Knowledge_Center_API.Services.Core
             return toAdd;
         }
 
-        public bool UpdateChatURL(int logId, string? chatURL) 
+        public bool UpdateLogEntryContent(int logId, LogEntryContentUpdateDto dto)
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            LogEntry existing = GetLogEntryByLogId(logId);
+            if (existing == null) return false;
+
+            // Merge-style update, mirroring KnowledgeNodeService.UpdateKnowledgeNodeFromDto:
+            // only fields the caller actually sent replace what's already stored.
+            string newTitle = dto.Title ?? existing.Title;
+            string newContent = !string.IsNullOrWhiteSpace(dto.Content) ? dto.Content : existing.Content;
+            bool newContributesToProgress = dto.ContributesToProgress ?? existing.ContributesToProgress;
+
+            FieldValidator.ValidateRequiredString(newContent, "Log Content", 200_000);
+            FieldValidator.ValidateOptionalString(newTitle, "Title", 200);
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
+                new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(newTitle) ? DBNull.Value : newTitle },
+                new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = newContent },
+                new NpgsqlParameter("@ContributesToProgress", NpgsqlDbType.Boolean) { Value = newContributesToProgress }
+            };
+
+            int rowsAffected = _database.ExecuteNonQuery(LogEntryQueries.UpdateLogEntryContent, parameters);
+            return rowsAffected > 0;
+        }
+
+        public bool UpdateChatURL(int logId, string? chatURL)
         {
             FieldValidator.ValidateId(logId, "Log ID");
             FieldValidator.ValidateOptionalChatURL(chatURL, "Chat URL", 2000);
@@ -146,6 +181,7 @@ namespace Knowledge_Center_API.Services.Core
                     LogId = Convert.ToInt32(rawDBRow["LogId"]),
                     NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
                     EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
+                    Title = rawDBRow["Title"]?.ToString(),
                     Content = rawDBRow["Content"].ToString(),
                     ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
                     ChatURL = rawDBRow["ChatURL"]?.ToString(),
@@ -199,6 +235,7 @@ namespace Knowledge_Center_API.Services.Core
                 LogId = Convert.ToInt32(rawDBRow["LogId"]),
                 NodeId = Convert.ToInt32(rawDBRow["NodeId"]),
                 EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
+                Title = rawDBRow["Title"]?.ToString(),
                 Content = rawDBRow["Content"].ToString(),
                 ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
                 ChatURL = rawDBRow["ChatURL"]?.ToString(),
@@ -245,6 +282,7 @@ namespace Knowledge_Center_API.Services.Core
                 LogId = Convert.ToInt32(row["LogId"]),
                 NodeId = Convert.ToInt32(row["NodeId"]),
                 EntryDate = Convert.ToDateTime(row["EntryDate"]),
+                Title = row["Title"]?.ToString(),
                 Content = row["Content"].ToString(),
                 ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"]),
                 ChatURL = row["ChatURL"]?.ToString()
@@ -253,6 +291,20 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === DELETE ===
+        public bool DeleteLogEntry(int logId)
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId }
+            };
+
+            // LogEntryTags rows cascade-delete via the FK, no separate cleanup needed.
+            int result = _database.ExecuteNonQuery(LogEntryQueries.DeleteLogEntryById, parameters);
+            return result > 0;
+        }
+
         public bool DeleteAllLogEntriesByNodeId(int nodeId)
         {
             // Validate Input Fields 

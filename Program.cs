@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -27,6 +28,15 @@ namespace Knowledge_Center_API
             builder.Services.AddSingleton(new DataAccess.Database(connectionString));
 
             /* =======================================================
+             * IMAGE UPLOAD STORAGE
+             * KC_UPLOAD_DIR should be set in production (e.g. a dedicated
+             * directory on MRTN-LAPPS's disk). Falls back to a local
+             * "uploads" folder next to the app for development.
+             * ======================================================= */
+            var uploadDirectory = Environment.GetEnvironmentVariable("KC_UPLOAD_DIR")
+                ?? Path.Combine(AppContext.BaseDirectory, "uploads");
+
+            /* =======================================================
              * DEPENDENCY INJECTION (SERVICES)
              * ======================================================= */
             builder.Services.AddScoped<Services.Core.KnowledgeNodeService>();
@@ -34,6 +44,7 @@ namespace Knowledge_Center_API
             builder.Services.AddScoped<Services.Core.LogEntryService>();
             builder.Services.AddScoped<Services.Core.TagService>();
             builder.Services.AddScoped<Services.Core.UserService>();
+            builder.Services.AddSingleton(new Services.Core.ImageService(uploadDirectory));
 
             /* =======================================================
              * FORWARDED HEADERS (reverse proxy)
@@ -164,6 +175,15 @@ namespace Knowledge_Center_API
                 return next();
             });
             app.UseStaticFiles();
+
+            // Serve uploaded images at /kc/uploads/{fileName} directly from disk —
+            // keeps the API out of the hot path for repeat image loads, no NFS
+            // mount needed since nginx already proxies all of /kc/* to this app.
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(uploadDirectory),
+                RequestPath = "/uploads"
+            });
 
             /* =======================================================
              * SWAGGER UI

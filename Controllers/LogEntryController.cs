@@ -89,6 +89,7 @@ namespace Knowledge_Center_API.Controllers
             {
                 LogId = 9999,
                 NodeId = log.NodeId,
+                Title = log.Title,
                 Content = log.Content,
                 EntryDate = DateTime.UtcNow
             });
@@ -131,6 +132,88 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
+        /// Updates a log entry's title, content, and/or progress flag.
+        /// </summary>
+        /// <param name="id">The ID of the log entry to update.</param>
+        /// <param name="dto">Fields to update — only supplied fields are changed.</param>
+        /// <returns>200 OK with the updated log entry.</returns>
+        /// <response code="200">Log entry updated successfully.</response>
+        /// <response code="400">Invalid input.</response>
+        /// <response code="404">Log entry not found.</response>
+        /// <response code="500">Server error during update.</response>
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, [FromBody] LogEntryContentUpdateDto dto)
+        {
+            // Demo mode: Updating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
+            {
+                var existingLog = _logEntryService.GetLogEntryByLogId(id);
+                if (existingLog == null)
+                    return NotFound(new { message = $"Log with ID {id} was not found." });
+
+                bool success = _logEntryService.UpdateLogEntryContent(id, dto);
+                if (!success)
+                    return StatusCode(500, new { message = "Failed to update log entry." });
+
+                var updatedLog = _logEntryService.GetLogEntryByLogId(id);
+                return Ok(updatedLog);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        /// <summary>
+        /// Deletes a log entry.
+        /// </summary>
+        /// <param name="id">The ID of the log entry to delete.</param>
+        /// <returns>204 No Content if deleted successfully.</returns>
+        /// <response code="204">Log entry deleted successfully.</response>
+        /// <response code="404">Log entry not found.</response>
+        /// <response code="500">Server error during deletion.</response>
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            // Demo mode: Deleting is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Deleting operations are disabled in demo mode." });
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            var existingLog = _logEntryService.GetLogEntryByLogId(id);
+            if (existingLog == null)
+                return NotFound(new { message = $"Log with ID {id} was not found." });
+
+            bool success = _logEntryService.DeleteLogEntry(id);
+            if (!success)
+                return StatusCode(500, new { message = "Failed to delete log entry." });
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Updates the Chat URL associated with a specific log entry.
         /// </summary>
         /// <param name="logId">The ID of the log entry to update.</param>
@@ -146,7 +229,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Updating is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Update operations are disabled in demo mode.");
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
             }
 
             // Rate Limit Check
@@ -195,7 +278,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Updating is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Update operations are disabled in demo mode.");
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
             }
 
             // Rate Limit Check
@@ -242,7 +325,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Deleting is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Deleting operations are disabled in demo mode.");
+                return StatusCode(403, new { message = "Deleting operations are disabled in demo mode." });
             }
 
             // Rate Limit Check
@@ -285,7 +368,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Deleting is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Deleting operations are disabled in demo mode.");
+                return StatusCode(403, new { message = "Deleting operations are disabled in demo mode." });
             }
 
             // Rate Limit Check
