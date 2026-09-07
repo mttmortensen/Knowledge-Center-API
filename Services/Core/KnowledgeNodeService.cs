@@ -105,12 +105,14 @@ namespace Knowledge_Center_API.Services.Core
             List<LogEntry> logs = _lgservice.GetLogsForKnowledgeNode(id);
 
             // Adding Logs to Dto
-            nodeDto.Logs = logs.Select(log => new LogEntryDetailsInlineDto 
+            nodeDto.Logs = logs.Select(log => new LogEntryDetailsInlineDto
             {
                 LogId = log.LogId,
+                Title = log.Title,
                 Content = log.Content,
                 EntryDate = log.EntryDate,
-                ContributesToProgress = log.ContributesToProgress
+                ContributesToProgress = log.ContributesToProgress,
+                ChatURL = log.ChatURL
 
             })
             .ToList();
