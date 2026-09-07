@@ -2,7 +2,7 @@
 using Knowledge_Center_API.Models.Auth;
 using Knowledge_Center_API.Services.Security;
 using Knowledge_Center_API.Services.Validation;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace Knowledge_Center_API.Services.Core
 {
@@ -29,9 +29,9 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateRequiredString(password, "Password", 100);
 
             // Query User from DB
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@Username", username)
+                new NpgsqlParameter("@Username", username)
             };
 
             var result = _db.ExecuteQuery(UserQueries.GetUserByUsername, parameters);

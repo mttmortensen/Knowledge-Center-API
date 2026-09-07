@@ -1,7 +1,7 @@
 ﻿using Knowledge_Center_API.Services.Validation;
 using Knowledge_Center_API.DataAccess;
-using Microsoft.Data.SqlClient;
-using System.Data;
+using Npgsql;
+using NpgsqlTypes;
 using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Models.TagEntries;
 
@@ -52,13 +52,13 @@ namespace Knowledge_Center_API.Services.Core
             // Set timestamp
             log.EntryDate = DateTime.Now;
 
-            var parameters = new List<SqlParameter>
+            var parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@NodeId", SqlDbType.Int) { Value = log.NodeId },
-                new SqlParameter("@EntryDate", SqlDbType.DateTime) { Value = log.EntryDate },
-                new SqlParameter("@Content", SqlDbType.NVarChar, 2000) { Value = log.Content },
-                new SqlParameter("@ContributesToProgress", SqlDbType.Bit) { Value = log.ContributesToProgress },
-                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) { Value = string.IsNullOrWhiteSpace(log.ChatURL) ? DBNull.Value : log.ChatURL }
+                new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = log.NodeId },
+                new NpgsqlParameter("@EntryDate", NpgsqlDbType.Timestamp) { Value = log.EntryDate },
+                new NpgsqlParameter("@Content", NpgsqlDbType.Varchar, 2000) { Value = log.Content },
+                new NpgsqlParameter("@ContributesToProgress", NpgsqlDbType.Boolean) { Value = log.ContributesToProgress },
+                new NpgsqlParameter("@ChatURL", NpgsqlDbType.Varchar, 2000) { Value = string.IsNullOrWhiteSpace(log.ChatURL) ? DBNull.Value : log.ChatURL }
             };
 
 
@@ -79,7 +79,7 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(logId, "Log ID");
 
             // Fetch current tagIDs on this log
-            var parameters = new List<SqlParameter> { new SqlParameter("@LogId", SqlDbType.Int) { Value = logId } };
+            var parameters = new List<NpgsqlParameter> { new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId } };
             var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
 
             var existingTagIds = existingRows
@@ -96,10 +96,10 @@ namespace Knowledge_Center_API.Services.Core
             {
                 FieldValidator.ValidateId(tagId, "Tag ID");
 
-                var insertParams = new List<SqlParameter>
+                var insertParams = new List<NpgsqlParameter>
                 {
-                    new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
-                    new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                    new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
+                    new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) { Value = tagId }
                 };
 
                 _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, insertParams);
@@ -113,10 +113,10 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(logId, "Log ID");
             FieldValidator.ValidateOptionalChatURL(chatURL, "Chat URL", 2000);
 
-            var parameters = new List<SqlParameter> 
+            var parameters = new List<NpgsqlParameter> 
             {
-                new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
-                new SqlParameter("@ChatURL", SqlDbType.NVarChar, 2000) 
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
+                new NpgsqlParameter("@ChatURL", NpgsqlDbType.Varchar, 2000) 
                 {
                     Value = string.IsNullOrWhiteSpace(chatURL) ? DBNull.Value : chatURL
                 }
@@ -183,9 +183,9 @@ namespace Knowledge_Center_API.Services.Core
             // Validate Input Fields 
             FieldValidator.ValidateId(logId, "Log Id");
 
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@LogId", SqlDbType.Int) { Value = logId }
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId }
             };
 
             // SELECT Query + Parameters to retrieve a specific LogEntry by LogID and map result into a LogEntry object
@@ -206,9 +206,9 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             // Get it's tags
-            var tagParams = new List<SqlParameter>
+            var tagParams = new List<NpgsqlParameter>
             {
-                new SqlParameter("@LogId", SqlDbType.Int) { Value = logId }
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId }
             };
 
             var tagRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, tagParams);
@@ -233,9 +233,9 @@ namespace Knowledge_Center_API.Services.Core
 
         public List<LogEntry> GetLogsForKnowledgeNode(int nodeId)
         {
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@NodeId", nodeId)
+                new NpgsqlParameter("@NodeId", nodeId)
             };
 
             var rawResults = _database.ExecuteQuery(LogEntryQueries.GetLogsByNodeId, parameters);
@@ -258,9 +258,9 @@ namespace Knowledge_Center_API.Services.Core
             // Validate Input Fields 
             FieldValidator.ValidateId(nodeId, "KnowledgeNode Id");
 
-            List<SqlParameter> parameters = new List<SqlParameter>
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
             {
-                new SqlParameter("@NodeId", SqlDbType.Int) { Value = nodeId }
+                new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = nodeId }
             };
 
             // DELETE Query + Parameters to delete all LogEntries from a specific Knowledge Node
@@ -275,7 +275,7 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(logId, "Log ID");
 
             // We still need to fetch all tags that are on this log
-            var parameters = new List<SqlParameter> { new SqlParameter("@LogId", SqlDbType.Int) { Value = logId } };
+            var parameters = new List<NpgsqlParameter> { new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId } };
             var existingRows = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByLogId, parameters);
 
             if (existingRows.Count == 0) return false;
@@ -286,10 +286,10 @@ namespace Knowledge_Center_API.Services.Core
             {
                 int tagId = Convert.ToInt32(row["TagId"]);
                 
-                var deleteParams = new List<SqlParameter>
+                var deleteParams = new List<NpgsqlParameter>
                 {
-                    new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
-                    new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                    new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
+                    new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) { Value = tagId }
                 };
 
                 _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, deleteParams);
@@ -309,10 +309,10 @@ namespace Knowledge_Center_API.Services.Core
             {
                 FieldValidator.ValidateId(tagId, "Tag ID");
 
-                var parameters = new List<SqlParameter>
+                var parameters = new List<NpgsqlParameter>
                 {
-                    new SqlParameter("@LogId", SqlDbType.Int) { Value = logId },
-                    new SqlParameter("@TagId", SqlDbType.Int) { Value = tagId }
+                    new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
+                    new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) { Value = tagId }
                 };
 
                 _database.ExecuteNonQuery(LogEntryQueries.DeleteLogTagRelations, parameters);
@@ -330,10 +330,10 @@ namespace Knowledge_Center_API.Services.Core
             {
                 FieldValidator.ValidateId(tagId, "Tag ID");
 
-                var parameters = new List<SqlParameter>
+                var parameters = new List<NpgsqlParameter>
                 {
-                    new SqlParameter("@LogId", SqlDbType.Int) {Value = logId},
-                    new SqlParameter("@TagId", SqlDbType.Int) {Value = tagId},
+                    new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) {Value = logId},
+                    new NpgsqlParameter("@TagId", NpgsqlDbType.Integer) {Value = tagId},
                 };
 
                 _database.ExecuteNonQuery(LogEntryQueries.InsertLogTagRelation, parameters);

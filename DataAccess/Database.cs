@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace Knowledge_Center_API.DataAccess
 {
@@ -18,21 +18,21 @@ namespace Knowledge_Center_API.DataAccess
 
         // === Connection Management ===
 
-        private SqlConnection OpenConnection() 
+        private NpgsqlConnection OpenConnection()
         {
             // Opens and returns a new SQL connection
-            SqlConnection connection = new SqlConnection(_connectionString);
+            NpgsqlConnection connection = new NpgsqlConnection(_connectionString);
             connection.Open();
             return connection;
         }
 
         // === Executing Write Operations (INSERT, UPDATE, DELETE) ===
 
-        public int ExecuteNonQuery(string query, List<SqlParameter> parameters) 
+        public int ExecuteNonQuery(string query, List<NpgsqlParameter> parameters)
         {
             // Executes a non-query SQL command (INSERT, UPDATE, DELETE) and returns a count of affected rows
             using (var connection = OpenConnection())
-            using (var command = new SqlCommand(query, connection))
+            using (var command = new NpgsqlCommand(query, connection))
             {
                 if (parameters != null)
                 {
@@ -49,13 +49,13 @@ namespace Knowledge_Center_API.DataAccess
 
         // === Executing Read Operations (SELECT) ===
 
-        public List<Dictionary<string, object>> ExecuteQuery(string sql, List<SqlParameter> parameters)
+        public List<Dictionary<string, object>> ExecuteQuery(string sql, List<NpgsqlParameter> parameters)
         {
             // Executes a SQL query and returns a list of db row data (as key/value pairs)
             var results = new List<Dictionary<string, object>>();
 
             using (var connection = OpenConnection())
-            using (var command = new SqlCommand(sql, connection))
+            using (var command = new NpgsqlCommand(sql, connection))
             {
                 if (parameters != null)
                 {
@@ -84,10 +84,10 @@ namespace Knowledge_Center_API.DataAccess
             return results;
         }
 
-        public T ExecuteScalar<T>(string query, List<SqlParameter> parameters) 
+        public T ExecuteScalar<T>(string query, List<NpgsqlParameter> parameters)
         {
             using (var connection = OpenConnection())
-            using (var command = new SqlCommand(query, connection)) 
+            using (var command = new NpgsqlCommand(query, connection))
             {
                 if(parameters != null)
                 {
