@@ -19,7 +19,7 @@ namespace Knowledge_Center_API.DataAccess.Demo
 
         public static List<LogEntry> LogEntries = new()
     {
-        new LogEntry { LogId = 1, NodeId = 1, Content = "This is a sample log entry.", EntryDate = DateTime.UtcNow }
+        new LogEntry { LogId = 1, NodeId = 1, Title = "Sample entry", Content = "This is a sample log entry.", EntryDate = DateTime.UtcNow }
     };
 
         public static List<Tags> Tags = new()

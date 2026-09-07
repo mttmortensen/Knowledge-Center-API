@@ -128,7 +128,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Updating is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Update operations are disabled in demo mode.");
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
             }
 
             // Rate Limit Check
@@ -169,7 +169,7 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Deleting is disabled
             if (User.HasClaim("demo", "true"))
             {
-                return Forbid("Deleting operations are disabled in demo mode.");
+                return StatusCode(403, new { message = "Deleting operations are disabled in demo mode." });
             }
 
             // Rate Limit Check

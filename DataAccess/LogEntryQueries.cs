@@ -10,9 +10,9 @@ namespace Knowledge_Center_API.DataAccess
     {
         public static readonly string InsertLogEntry = @"
             INSERT INTO ""LogEntries""
-                (""NodeId"", ""EntryDate"", ""Content"", ""ContributesToProgress"", ""ChatURL"")
+                (""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ContributesToProgress"", ""ChatURL"")
             VALUES
-                (@NodeId, @EntryDate, @Content, @ContributesToProgress, @ChatURL)
+                (@NodeId, @EntryDate, @Title, @Content, @ContributesToProgress, @ChatURL)
             RETURNING ""LogId"";
         ";
 
@@ -37,7 +37,7 @@ namespace Knowledge_Center_API.DataAccess
         // Removing GetAllLogsWithTags query since now
         // We are building out the logs and tags in the service layer.
         public static readonly string GetAllLogsWithoutTags = @"
-            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Content"", ""ContributesToProgress"", ""ChatURL""
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ContributesToProgress"", ""ChatURL""
             FROM ""LogEntries""
             ORDER BY ""EntryDate"" DESC;
         ";
@@ -60,7 +60,7 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByIdWithoutTags = @"
-            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Content"", ""ContributesToProgress"", ""ChatURL""
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ContributesToProgress"", ""ChatURL""
             FROM ""LogEntries""
             WHERE ""LogId"" = @LogId;
         ";
@@ -81,10 +81,21 @@ namespace Knowledge_Center_API.DataAccess
             WHERE ""LogId"" = @LogId;
         ";
 
+        public static readonly string UpdateLogEntryContent = @"
+            UPDATE ""LogEntries""
+            SET ""Title"" = @Title, ""Content"" = @Content, ""ContributesToProgress"" = @ContributesToProgress
+            WHERE ""LogId"" = @LogId;
+        ";
+
 
         public static readonly string DeleteAllLogsByNodeId = @"
             DELETE FROM ""LogEntries""
             WHERE ""NodeId"" = @NodeId;
+        ";
+
+        public static readonly string DeleteLogEntryById = @"
+            DELETE FROM ""LogEntries""
+            WHERE ""LogId"" = @LogId;
         ";
 
         public static readonly string DeleteLogTagRelations = @"
