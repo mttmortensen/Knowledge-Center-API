@@ -14,14 +14,17 @@ namespace Knowledge_Center_API.Controllers
     public class AuthController : Controller
     {
         private readonly UserService _userService;
+        private readonly ILogger<AuthController> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
         /// </summary>
         /// <param name="userService">The user service for authentication logic.</param>
-        public AuthController(UserService userService)
+        /// <param name="logger">Logger for unexpected authentication failures.</param>
+        public AuthController(UserService userService, ILogger<AuthController> logger)
         {
             _userService = userService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -71,8 +74,9 @@ namespace Knowledge_Center_API.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Login request failed for username {Username}", loginData?.Username);
                 return StatusCode(500, new { message = "Login request failed." });
             }
         }
