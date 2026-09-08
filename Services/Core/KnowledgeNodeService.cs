@@ -189,6 +189,18 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
+        // === EXISTENCE CHECK ===
+        public bool KnowledgeNodeExists(int id)
+        {
+            List<NpgsqlParameter> parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Id", id)
+            };
+
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, parameters);
+            return rawDBResults.Count > 0;
+        }
+
         // === DELETE ===
         public bool DeleteKnowledgeNode(int id)
         {

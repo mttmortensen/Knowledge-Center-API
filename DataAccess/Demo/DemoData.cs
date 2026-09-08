@@ -1,4 +1,5 @@
-﻿using Knowledge_Center_API.Models.Domains;
+﻿using Knowledge_Center_API.Models.Actions;
+using Knowledge_Center_API.Models.Domains;
 using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Models.TagEntries;
@@ -25,6 +26,11 @@ namespace Knowledge_Center_API.DataAccess.Demo
         public static List<Tags> Tags = new()
     {
         new Tags { TagId = 1, Name = "demo" }
+    };
+
+        public static List<ActionItem> Actions = new()
+    {
+        new ActionItem { Id = 1, KnowledgeNodeId = 1, ActionText = "Demo action", Status = "Open", CreatedAt = DateTime.UtcNow }
     };
     }
 }

@@ -24,7 +24,10 @@ namespace Knowledge_Center_API.Services.Security
             { "DELETE:/api/domains", 10 },
             { "POST:/api/tags", 10 },
             { "PUT:/api/tags", 10 },
-            { "DELETE:/api/tags", 10 }
+            { "DELETE:/api/tags", 10 },
+            { "POST:/api/actions", 20 },
+            { "PUT:/api/actions", 20 },
+            { "DELETE:/api/actions", 10 }
         };
 
         private static readonly TimeSpan TimeWindow = TimeSpan.FromMinutes(1);

@@ -18,11 +18,13 @@ namespace Knowledge_Center_API.Controllers
     {
         private readonly KnowledgeNodeService _knowledgeNodeService;
         private readonly LogEntryService _logEntryService;
+        private readonly ActionService _actionService;
 
-        public KnowledgeNodeController(KnowledgeNodeService knService, LogEntryService lgService) 
+        public KnowledgeNodeController(KnowledgeNodeService knService, LogEntryService lgService, ActionService actionService)
         {
             _knowledgeNodeService = knService;
             _logEntryService = lgService;
+            _actionService = actionService;
         }
 
         /// <summary>
@@ -211,6 +213,11 @@ namespace Knowledge_Center_API.Controllers
             bool logsDeleted = _logEntryService.DeleteAllLogEntriesByNodeId(id);
             if (!logsDeleted)
                 return StatusCode(500, new { message = "Failed to delete related logs." });
+
+            // Delete all actions associated with the node
+            bool actionsDeleted = _actionService.DeleteAllActionsByNodeId(id);
+            if (!actionsDeleted)
+                return StatusCode(500, new { message = "Failed to delete related actions." });
 
             // Now delete the node
             bool nodeDeleted = _knowledgeNodeService.DeleteKnowledgeNode(id);
