@@ -13,6 +13,8 @@ namespace Knowledge_Center_API.Models.KnowledgeNodes
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdated { get; set; }
+        public bool IsArchived { get; set; }
+        public DateTime? ArchivedAt { get; set; }
         public List<LogEntryListDto> Logs { get; set; }
     }
 }

@@ -30,17 +30,22 @@ namespace Knowledge_Center_API.Controllers
         /// <summary>
         /// Retrieves all knowledge nodes.
         /// </summary>
+        /// <param name="includeArchived">When true, includes archived knowledge nodes in the results.</param>
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] bool includeArchived = false)
         {
             // Demo mode: Read-only
             if (User.HasClaim("demo", "true"))
             {
                 // Use in-memory demo data
-                return Ok(DemoData.KnowledgeNodes);
+                var demoNodes = includeArchived
+                    ? DemoData.KnowledgeNodes
+                    : DemoData.KnowledgeNodes.Where(n => !n.IsArchived);
+
+                return Ok(demoNodes);
             }
 
-            var nodes = _knowledgeNodeService.GetAllKnowledgeNodes();
+            var nodes = _knowledgeNodeService.GetAllKnowledgeNodes(includeArchived);
             return Ok(nodes);
         }
 
@@ -225,6 +230,54 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "Node not found or delete failed." });
 
             return Ok(new { message = "Node and related logs deleted successfully." });
+        }
+
+        /// <summary>
+        /// Archives a knowledge node by ID.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
+        [HttpPut("{id}/archive")]
+        public IActionResult Archive(int id)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Archive operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            bool success = _knowledgeNodeService.ArchiveKnowledgeNode(id);
+            if (!success)
+                return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
+
+            return Ok(_knowledgeNodeService.GetKnowledgeNodeWithLogsById(id));
+        }
+
+        /// <summary>
+        /// Unarchives a knowledge node by ID.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
+        [HttpPut("{id}/unarchive")]
+        public IActionResult Unarchive(int id)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Archive operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            bool success = _knowledgeNodeService.UnarchiveKnowledgeNode(id);
+            if (!success)
+                return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
+
+            return Ok(_knowledgeNodeService.GetKnowledgeNodeWithLogsById(id));
         }
     }
 }

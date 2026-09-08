@@ -17,6 +17,11 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
         public static readonly string GetAllKnowledgeNodes = @"
+            SELECT * FROM ""KnowledgeNodes""
+            WHERE ""IsArchived"" = FALSE;
+        ";
+
+        public static readonly string GetAllKnowledgeNodesIncludingArchived = @"
             SELECT * FROM ""KnowledgeNodes"";
         ";
 
@@ -46,6 +51,30 @@ namespace Knowledge_Center_API.DataAccess
         public static readonly string DeleteKnowledgeNode = @"
             DELETE FROM ""KnowledgeNodes""
             WHERE ""Id"" = @Id;
+        ";
+
+        public static readonly string ArchiveKnowledgeNode = @"
+            UPDATE ""KnowledgeNodes""
+            SET ""IsArchived"" = TRUE, ""ArchivedAt"" = @ArchivedAt
+            WHERE ""Id"" = @Id;
+        ";
+
+        public static readonly string UnarchiveKnowledgeNode = @"
+            UPDATE ""KnowledgeNodes""
+            SET ""IsArchived"" = FALSE, ""ArchivedAt"" = NULL
+            WHERE ""Id"" = @Id;
+        ";
+
+        public static readonly string ArchiveKnowledgeNodesByDomainId = @"
+            UPDATE ""KnowledgeNodes""
+            SET ""IsArchived"" = TRUE, ""ArchivedAt"" = @ArchivedAt
+            WHERE ""DomainId"" = @DomainId;
+        ";
+
+        public static readonly string UnarchiveKnowledgeNodesByDomainId = @"
+            UPDATE ""KnowledgeNodes""
+            SET ""IsArchived"" = FALSE, ""ArchivedAt"" = NULL
+            WHERE ""DomainId"" = @DomainId;
         ";
     }
 }

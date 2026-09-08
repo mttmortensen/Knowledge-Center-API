@@ -64,12 +64,16 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === READ ===
-        public List<KnowledgeNodeListDto> GetAllKnowledgeNodes()
+        public List<KnowledgeNodeListDto> GetAllKnowledgeNodes(bool includeArchived = false)
         {
             // SELECT Query + Parameters to retrieve all KnowledgeNodes and map results into KnowledgeNode objects
             List<KnowledgeNodeListDto> nodes = new List<KnowledgeNodeListDto>();
 
-            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetAllKnowledgeNodes, null);
+            string query = includeArchived
+                ? KnowledgeNodeQueries.GetAllKnowledgeNodesIncludingArchived
+                : KnowledgeNodeQueries.GetAllKnowledgeNodes;
+
+            var rawDBResults = _database.ExecuteQuery(query, null);
 
             foreach (var rawDBRow in rawDBResults)
             {
@@ -220,6 +224,82 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
+        // === ARCHIVE ===
+        public bool ArchiveKnowledgeNode(int id)
+        {
+            FieldValidator.ValidateId(id, "KnowledgeNode ID");
+
+            var lookupParams = new List<NpgsqlParameter> { new NpgsqlParameter("@Id", id) };
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, lookupParams);
+            if (rawDBResults.Count == 0)
+                return false;
+
+            // Idempotent: already archived, nothing to do
+            if (Convert.ToBoolean(rawDBResults[0]["IsArchived"]))
+                return true;
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = id },
+                new NpgsqlParameter("@ArchivedAt", NpgsqlDbType.Timestamp) { Value = DateTime.Now }
+            };
+
+            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.ArchiveKnowledgeNode, parameters);
+            return result > 0;
+        }
+
+        public bool UnarchiveKnowledgeNode(int id)
+        {
+            FieldValidator.ValidateId(id, "KnowledgeNode ID");
+
+            var lookupParams = new List<NpgsqlParameter> { new NpgsqlParameter("@Id", id) };
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, lookupParams);
+            if (rawDBResults.Count == 0)
+                return false;
+
+            // Idempotent: already unarchived, nothing to do
+            if (!Convert.ToBoolean(rawDBResults[0]["IsArchived"]))
+                return true;
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = id }
+            };
+
+            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.UnarchiveKnowledgeNode, parameters);
+            return result > 0;
+        }
+
+        // Bulk cascade operations used by DomainService when a Domain is archived/unarchived.
+        // A domain with zero nodes is a valid, successful outcome here, not a failure —
+        // unlike ArchiveKnowledgeNode, this isn't a lookup-by-id.
+        public bool ArchiveAllNodesByDomainId(int domainId, DateTime archivedAt)
+        {
+            FieldValidator.ValidateId(domainId, "Domain ID");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId },
+                new NpgsqlParameter("@ArchivedAt", NpgsqlDbType.Timestamp) { Value = archivedAt }
+            };
+
+            _database.ExecuteNonQuery(KnowledgeNodeQueries.ArchiveKnowledgeNodesByDomainId, parameters);
+            return true;
+        }
+
+        public bool UnarchiveAllNodesByDomainId(int domainId)
+        {
+            FieldValidator.ValidateId(domainId, "Domain ID");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId }
+            };
+
+            _database.ExecuteNonQuery(KnowledgeNodeQueries.UnarchiveKnowledgeNodesByDomainId, parameters);
+            return true;
+        }
+
         /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
         private KnowledgeNodeListDto ConvertDBRowToKNBaseObj(Dictionary<string, object> rawDBRow)
         {
@@ -234,6 +314,10 @@ namespace Knowledge_Center_API.Services.Core
                 Status = rawDBRow["Status"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"]),
+                IsArchived = Convert.ToBoolean(rawDBRow["IsArchived"]),
+                ArchivedAt = rawDBRow["ArchivedAt"] == null || rawDBRow["ArchivedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(rawDBRow["ArchivedAt"]),
                 Logs = new List<LogEntryListDto>()
             };
         }
@@ -251,6 +335,10 @@ namespace Knowledge_Center_API.Services.Core
                 Status = rawDBRow["Status"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUpdated = Convert.ToDateTime(rawDBRow["LastUpdated"]),
+                IsArchived = Convert.ToBoolean(rawDBRow["IsArchived"]),
+                ArchivedAt = rawDBRow["ArchivedAt"] == null || rawDBRow["ArchivedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(rawDBRow["ArchivedAt"]),
                 Logs = new List<LogEntryDetailsInlineDto>()
             };
         }

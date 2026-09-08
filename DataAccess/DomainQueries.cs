@@ -17,6 +17,11 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
         public static readonly string GetAllDomains = @"
+            SELECT * FROM ""Domains""
+            WHERE ""IsArchived"" = FALSE;
+        ";
+
+        public static readonly string GetAllDomainsIncludingArchived = @"
             SELECT * FROM ""Domains"";
         ";
 
@@ -43,6 +48,17 @@ namespace Knowledge_Center_API.DataAccess
                 ""DomainId"" = @DomainId;
         ";
 
+        public static readonly string ArchiveDomain = @"
+            UPDATE ""Domains""
+            SET ""IsArchived"" = TRUE, ""ArchivedAt"" = @ArchivedAt
+            WHERE ""DomainId"" = @DomainId;
+        ";
+
+        public static readonly string UnarchiveDomain = @"
+            UPDATE ""Domains""
+            SET ""IsArchived"" = FALSE, ""ArchivedAt"" = NULL
+            WHERE ""DomainId"" = @DomainId;
+        ";
 
     }
 }

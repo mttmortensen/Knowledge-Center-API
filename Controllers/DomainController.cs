@@ -27,18 +27,23 @@ namespace Knowledge_Center_API.Controllers
         /// <summary>
         /// Retrieves all domains.
         /// </summary>
+        /// <param name="includeArchived">When true, includes archived domains in the results.</param>
         [HttpGet]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] bool includeArchived = false)
         {
             // Demo mode: Read-only
             if (User.HasClaim("demo", "true"))
             {
                 // Use in-memory demo data
-                return Ok(DemoData.Domains);
+                var demoDomains = includeArchived
+                    ? DemoData.Domains
+                    : DemoData.Domains.Where(d => !d.IsArchived);
+
+                return Ok(demoDomains);
             }
 
 
-            var domains = _domainService.GetAllDomains();
+            var domains = _domainService.GetAllDomains(includeArchived);
             return Ok(domains);
         }
 
@@ -207,6 +212,54 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "Domain not found or delete failed." });
 
             return Ok(new { message = "Domain deleted" });
+        }
+
+        /// <summary>
+        /// Archives a domain and cascades the archive to its knowledge nodes.
+        /// </summary>
+        /// <param name="id">Domain ID.</param>
+        [HttpPut("{id}/archive")]
+        public IActionResult Archive(int id)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Archive operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            bool success = _domainService.ArchiveDomain(id);
+            if (!success)
+                return NotFound(new { message = $"Domain with ID {id} not found." });
+
+            return Ok(_domainService.GetDomainById(id));
+        }
+
+        /// <summary>
+        /// Unarchives a domain and cascades the unarchive to its knowledge nodes.
+        /// </summary>
+        /// <param name="id">Domain ID.</param>
+        [HttpPut("{id}/unarchive")]
+        public IActionResult Unarchive(int id)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Archive operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            bool success = _domainService.UnarchiveDomain(id);
+            if (!success)
+                return NotFound(new { message = $"Domain with ID {id} not found." });
+
+            return Ok(_domainService.GetDomainById(id));
         }
     }
 }

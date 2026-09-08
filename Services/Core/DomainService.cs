@@ -15,9 +15,11 @@ namespace Knowledge_Center_API.Services.Core
     public class DomainService
     {
         private readonly Database _database;
-        public DomainService(Database database)
+        private readonly KnowledgeNodeService _knService;
+        public DomainService(Database database, KnowledgeNodeService knService)
         {
             _database = database;
+            _knService = knService;
         }
 
         /* ===================== CRUD ===================== */
@@ -55,11 +57,12 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // === READ ===
-        public List<Domain> GetAllDomains()
+        public List<Domain> GetAllDomains(bool includeArchived = false)
         {
             List<Domain> domains = new List<Domain>();
 
-            var rawDBResults = _database.ExecuteQuery(DomainQueries.GetAllDomains, null);
+            string query = includeArchived ? DomainQueries.GetAllDomainsIncludingArchived : DomainQueries.GetAllDomains;
+            var rawDBResults = _database.ExecuteQuery(query, null);
 
             foreach (var rawDBRow in rawDBResults)
             {
@@ -98,7 +101,9 @@ namespace Knowledge_Center_API.Services.Core
                 ConfidenceLevel = node.ConfidenceLevel,
                 Status = node.Status,
                 CreatedAt = node.CreatedAt,
-                LastUpdated = node.LastUpdated
+                LastUpdated = node.LastUpdated,
+                IsArchived = node.IsArchived,
+                ArchivedAt = node.ArchivedAt
             })
             .ToList();
 
@@ -124,7 +129,11 @@ namespace Knowledge_Center_API.Services.Core
                 ConfidenceLevel = Convert.ToInt32(row["ConfidenceLevel"]),
                 Status = row["Status"].ToString(),
                 CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
-                LastUpdated = Convert.ToDateTime(row["LastUpdated"])
+                LastUpdated = Convert.ToDateTime(row["LastUpdated"]),
+                IsArchived = Convert.ToBoolean(row["IsArchived"]),
+                ArchivedAt = row["ArchivedAt"] == null || row["ArchivedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(row["ArchivedAt"])
 
             })
             .ToList();
@@ -219,6 +228,58 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
+        // === ARCHIVE ===
+        public bool ArchiveDomain(int domainId)
+        {
+            var existing = GetDomainById(domainId);
+            if (existing == null)
+                return false;
+
+            // Idempotent: already archived, nothing to do
+            if (existing.IsArchived)
+                return true;
+
+            DateTime archivedAt = DateTime.Now;
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId },
+                new NpgsqlParameter("@ArchivedAt", NpgsqlDbType.Timestamp) { Value = archivedAt }
+            };
+
+            int result = _database.ExecuteNonQuery(DomainQueries.ArchiveDomain, parameters);
+            if (result <= 0)
+                return false;
+
+            // Cascade: archiving a Domain archives all of its KnowledgeNodes too
+            _knService.ArchiveAllNodesByDomainId(domainId, archivedAt);
+            return true;
+        }
+
+        public bool UnarchiveDomain(int domainId)
+        {
+            var existing = GetDomainById(domainId);
+            if (existing == null)
+                return false;
+
+            // Idempotent: already unarchived, nothing to do
+            if (!existing.IsArchived)
+                return true;
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId }
+            };
+
+            int result = _database.ExecuteNonQuery(DomainQueries.UnarchiveDomain, parameters);
+            if (result <= 0)
+                return false;
+
+            // Cascade: unarchiving a Domain unarchives all of its KnowledgeNodes too
+            _knService.UnarchiveAllNodesByDomainId(domainId);
+            return true;
+        }
+
         /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */
 
         private Domain ConvertDBRowToDomainBaseObj(Dictionary<string, object> rawDBRow)
@@ -230,7 +291,11 @@ namespace Knowledge_Center_API.Services.Core
                 DomainDescription = rawDBRow["DomainDescription"].ToString(),
                 DomainStatus = rawDBRow["DomainStatus"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
-                LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"])
+                LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"]),
+                IsArchived = Convert.ToBoolean(rawDBRow["IsArchived"]),
+                ArchivedAt = rawDBRow["ArchivedAt"] == null || rawDBRow["ArchivedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(rawDBRow["ArchivedAt"])
             };
         }
 
@@ -244,6 +309,10 @@ namespace Knowledge_Center_API.Services.Core
                 DomainStatus = rawDBRow["DomainStatus"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"]),
+                IsArchived = Convert.ToBoolean(rawDBRow["IsArchived"]),
+                ArchivedAt = rawDBRow["ArchivedAt"] == null || rawDBRow["ArchivedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(rawDBRow["ArchivedAt"]),
                 KnowledgeNodes = new List<KnowledgeNodeInlineDto>()
             };
         }
