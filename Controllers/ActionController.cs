@@ -128,15 +128,15 @@ namespace Knowledge_Center_API.Controllers
         /// <summary>
         /// Creates a new action for a knowledge node.
         /// </summary>
-        /// <param name="action">Action details.</param>
+        /// <param name="dto">Action details.</param>
         [HttpPost]
-        public IActionResult Create([FromBody] ActionItem action)
+        public IActionResult Create([FromBody] ActionItemCreateDto dto)
         {
             var demoResult = AuthHelper.HandleDemoCreate(User, () => new ActionItem
             {
                 Id = 9999,
-                KnowledgeNodeId = action.KnowledgeNodeId,
-                ActionText = action.ActionText,
+                KnowledgeNodeId = dto.KnowledgeNodeId,
+                ActionText = dto.ActionText,
                 Status = "Open",
                 CreatedAt = DateTime.UtcNow
             });
@@ -151,6 +151,12 @@ namespace Knowledge_Center_API.Controllers
 
             try
             {
+                var action = new ActionItem
+                {
+                    KnowledgeNodeId = dto.KnowledgeNodeId,
+                    ActionText = dto.ActionText
+                };
+
                 bool success = _actionService.CreateActionItem(action);
                 if (!success)
                     return StatusCode(500, new { message = "Failed to create action." });
