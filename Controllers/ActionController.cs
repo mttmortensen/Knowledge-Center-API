@@ -91,6 +91,21 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
+        /// Retrieves all completed actions across every knowledge node.
+        /// </summary>
+        [HttpGet("completed")]
+        public IActionResult GetAllCompleted()
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return Ok(DemoData.Actions.Where(a => a.Status == "Completed"));
+            }
+
+            var actions = _actionService.GetAllCompletedActions();
+            return Ok(actions);
+        }
+
+        /// <summary>
         /// Retrieves open-action counts grouped by knowledge node.
         /// </summary>
         [HttpGet("open-counts")]

@@ -99,6 +99,12 @@ namespace Knowledge_Center_API.Services.Core
             return rawDBResults.Select(ConvertDBRowToActionItem).ToList();
         }
 
+        public List<ActionItem> GetAllCompletedActions()
+        {
+            var rawDBResults = _database.ExecuteQuery(ActionQueries.GetAllCompletedActions, null);
+            return rawDBResults.Select(ConvertDBRowToActionItem).ToList();
+        }
+
         public List<ActionOpenCountDto> GetOpenActionCountsByNode()
         {
             var rawDBResults = _database.ExecuteQuery(ActionQueries.GetOpenActionCountsByNode, null);

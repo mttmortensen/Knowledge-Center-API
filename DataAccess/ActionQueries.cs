@@ -33,6 +33,12 @@ namespace Knowledge_Center_API.DataAccess
             ORDER BY ""KnowledgeNodeId"", ""CreatedAt"" DESC;
         ";
 
+        public static readonly string GetAllCompletedActions = @"
+            SELECT * FROM ""Actions""
+            WHERE ""Status"" = 'Completed'
+            ORDER BY ""KnowledgeNodeId"", ""CompletedAt"" DESC;
+        ";
+
         public static readonly string GetOpenActionCountsByNode = @"
             SELECT ""KnowledgeNodeId"", COUNT(*) AS ""OpenCount""
             FROM ""Actions""
