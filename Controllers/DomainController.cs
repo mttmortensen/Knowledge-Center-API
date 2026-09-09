@@ -4,6 +4,7 @@ using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using System.Xml.Linq;
 
 namespace Knowledge_Center_API.Controllers
@@ -207,11 +208,26 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            bool success = _domainService.DeleteDomain(id);
-            if (!success)
-                return StatusCode(500, new { message = "Domain not found or delete failed." });
+            try
+            {
+                bool success = _domainService.DeleteDomain(id);
+                if (!success)
+                    return StatusCode(500, new { message = "Domain not found or delete failed." });
 
-            return Ok(new { message = "Domain deleted" });
+                return Ok(new { message = "Domain deleted" });
+            }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+            {
+                // Domains don't cascade-delete their Knowledge Nodes — surface a clear
+                // 409 instead of letting the FK violation bubble up as an unhandled 500
+                // (which tears the connection down before CORS headers are attached,
+                // showing up client-side as an opaque "CORS blocked" / failed-fetch error).
+                return Conflict(new { message = "Cannot delete a domain that still has knowledge nodes. Delete or move them first." });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
         }
 
         /// <summary>
