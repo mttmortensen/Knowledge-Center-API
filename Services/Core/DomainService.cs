@@ -36,6 +36,7 @@ namespace Knowledge_Center_API.Services.Core
             DateTime now = DateTime.Now;
             domain.CreatedAt = now;
             domain.LastUsed = now;
+            domain.LastUpdated = now;
 
             // Build SQL Parameters
             var parameters = new List<NpgsqlParameter>
@@ -180,7 +181,9 @@ namespace Knowledge_Center_API.Services.Core
             if (!string.IsNullOrWhiteSpace(dto.DomainDescription)) existing.DomainDescription = dto.DomainDescription;
             if (!string.IsNullOrWhiteSpace(dto.DomainStatus)) existing.DomainStatus = dto.DomainStatus;
 
-            existing.LastUpdated = DateTime.Now;
+            // "LastUsed" is the column UpdateDomain actually persists — the DB has no
+            // separate LastUpdated column, so this is what the API reports as LastUpdated.
+            existing.LastUsed = DateTime.Now;
 
             return UpdateDomain(existing);
         }
@@ -292,6 +295,9 @@ namespace Knowledge_Center_API.Services.Core
                 DomainStatus = rawDBRow["DomainStatus"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"]),
+                // No dedicated LastUpdated column exists on "Domains" — LastUsed is the
+                // timestamp that's actually maintained, so report it as LastUpdated too.
+                LastUpdated = Convert.ToDateTime(rawDBRow["LastUsed"]),
                 IsArchived = Convert.ToBoolean(rawDBRow["IsArchived"]),
                 ArchivedAt = rawDBRow["ArchivedAt"] == null || rawDBRow["ArchivedAt"] == DBNull.Value
                     ? (DateTime?)null
@@ -309,6 +315,7 @@ namespace Knowledge_Center_API.Services.Core
                 DomainStatus = rawDBRow["DomainStatus"].ToString(),
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 LastUsed = Convert.ToDateTime(rawDBRow["LastUsed"]),
+                LastUpdated = Convert.ToDateTime(rawDBRow["LastUsed"]),
                 IsArchived = Convert.ToBoolean(rawDBRow["IsArchived"]),
                 ArchivedAt = rawDBRow["ArchivedAt"] == null || rawDBRow["ArchivedAt"] == DBNull.Value
                     ? (DateTime?)null
