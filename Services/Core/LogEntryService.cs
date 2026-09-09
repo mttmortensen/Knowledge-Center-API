@@ -315,11 +315,12 @@ namespace Knowledge_Center_API.Services.Core
                 new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = nodeId }
             };
 
-            // DELETE Query + Parameters to delete all LogEntries from a specific Knowledge Node
-            int result = _database.ExecuteNonQuery(LogEntryQueries.DeleteAllLogsByNodeId, parameters);
+            // DELETE Query + Parameters to delete all LogEntries from a specific Knowledge Node.
+            // A node with no logs deletes 0 rows — that's still a success, not a failure,
+            // so we don't gate on result > 0 here (unlike single-row deletes).
+            _database.ExecuteNonQuery(LogEntryQueries.DeleteAllLogsByNodeId, parameters);
 
-            // Return true to see if DELETE was successful
-            return result > 0;
+            return true;
         }
 
         public bool RemoveAllTagsFromLog(int logId)
