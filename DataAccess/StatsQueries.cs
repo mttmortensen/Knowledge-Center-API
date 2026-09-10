@@ -60,5 +60,30 @@ namespace Knowledge_Center_API.DataAccess
             FROM ""LogEntries""
             ORDER BY ""Day"" DESC;
         ";
+
+        // Powers the dashboard's GitHub-style contribution heatmap: one row per day
+        // that had at least one CTP entry, bounded to the heatmap's display window.
+        public static readonly string GetCtpCountsByDay = @"
+            SELECT DATE(""EntryDate"") AS ""Date"", COUNT(*) AS ""Count""
+            FROM ""LogEntries""
+            WHERE ""ContributesToProgress"" = TRUE AND ""EntryDate"" >= @Since
+            GROUP BY DATE(""EntryDate"")
+            ORDER BY DATE(""EntryDate"");
+        ";
+
+        public static readonly string GetTopTags = @"
+            SELECT t.""TagId"", t.""Name"", COUNT(lt.""LogId"") AS ""Count""
+            FROM ""Tags"" t
+            INNER JOIN ""LogEntryTags"" lt ON lt.""TagId"" = t.""TagId""
+            GROUP BY t.""TagId"", t.""Name""
+            ORDER BY COUNT(lt.""LogId"") DESC, t.""Name""
+            LIMIT @Limit;
+        ";
+
+        public static readonly string GetRecentActions = @"
+            SELECT * FROM ""Actions""
+            ORDER BY ""CreatedAt"" DESC
+            LIMIT @Limit;
+        ";
     }
 }

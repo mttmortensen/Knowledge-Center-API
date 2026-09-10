@@ -1,10 +1,17 @@
 using Knowledge_Center_API.DataAccess;
+using Knowledge_Center_API.Models.Actions;
 using Knowledge_Center_API.Models.Stats;
+using Npgsql;
+using NpgsqlTypes;
 
 namespace Knowledge_Center_API.Services.Core
 {
     public class StatsService
     {
+        private const int HeatmapDays = 371; // ~53 weeks, matches the frontend's contribution calendar window
+        private const int TopTagsLimit = 8;
+        private const int RecentActionsLimit = 8;
+
         private readonly Database _database;
 
         public StatsService(Database database)
@@ -21,7 +28,10 @@ namespace Knowledge_Center_API.Services.Core
                 LogEntries = GetLogEntryStats(),
                 Actions = GetActionStats(),
                 Tags = GetTagStats(),
-                LogStreak = GetLogStreak()
+                LogStreak = GetLogStreak(),
+                CtpByDay = GetCtpByDay(),
+                TopTags = GetTopTags(TopTagsLimit),
+                RecentActions = GetRecentActions(RecentActionsLimit)
             };
         }
 
@@ -148,6 +158,65 @@ namespace Knowledge_Center_API.Services.Core
                 return dateOnly;
 
             return DateOnly.FromDateTime(Convert.ToDateTime(value));
+        }
+
+        private List<CtpDayCountDto> GetCtpByDay()
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = DateTime.Now.Date.AddDays(-HeatmapDays) }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(StatsQueries.GetCtpCountsByDay, parameters);
+
+            return rawDBResults.Select(row => new CtpDayCountDto
+            {
+                Date = ToDateOnly(row["Date"]).ToDateTime(TimeOnly.MinValue),
+                Count = Convert.ToInt32(row["Count"])
+            }).ToList();
+        }
+
+        private List<TagCountDto> GetTopTags(int limit)
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Limit", NpgsqlDbType.Integer) { Value = limit }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(StatsQueries.GetTopTags, parameters);
+
+            return rawDBResults.Select(row => new TagCountDto
+            {
+                TagId = Convert.ToInt32(row["TagId"]),
+                Name = row["Name"].ToString(),
+                Count = Convert.ToInt32(row["Count"])
+            }).ToList();
+        }
+
+        private List<ActionItem> GetRecentActions(int limit)
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Limit", NpgsqlDbType.Integer) { Value = limit }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(StatsQueries.GetRecentActions, parameters);
+            return rawDBResults.Select(ConvertDBRowToActionItem).ToList();
+        }
+
+        private ActionItem ConvertDBRowToActionItem(Dictionary<string, object> rawDBRow)
+        {
+            return new ActionItem
+            {
+                Id = Convert.ToInt32(rawDBRow["Id"]),
+                KnowledgeNodeId = Convert.ToInt32(rawDBRow["KnowledgeNodeId"]),
+                ActionText = rawDBRow["ActionText"].ToString(),
+                Status = rawDBRow["Status"].ToString(),
+                CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
+                CompletedAt = rawDBRow["CompletedAt"] == null || rawDBRow["CompletedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(rawDBRow["CompletedAt"])
+            };
         }
     }
 }
