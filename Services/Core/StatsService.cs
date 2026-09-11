@@ -27,7 +27,9 @@ namespace Knowledge_Center_API.Services.Core
                 Actions = GetActionStats(),
                 Tags = GetTagStats(),
                 LogStreak = GetLogStreak(),
+                ActionStreak = GetActionStreak(),
                 CtpByDay = GetCtpByDay(),
+                ActionsByDay = GetActionsByDay(),
                 TopTags = GetTopTags(TopTagsLimit)
             };
         }
@@ -114,6 +116,36 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             var rawDBResults = _database.ExecuteQuery(StatsQueries.GetCtpCountsByDay, parameters);
+
+            return rawDBResults.Select(row => new CtpDayCountDto
+            {
+                Date = ToDateOnly(row["Date"]).ToDateTime(TimeOnly.MinValue),
+                Count = Convert.ToInt32(row["Count"])
+            }).ToList();
+        }
+
+        // Streak of consecutive days with at least one completed action.
+        private LogStreakDto GetActionStreak()
+        {
+            var rawDBResults = _database.ExecuteQuery(StatsQueries.GetDistinctActionCompletionDays, null);
+
+            var days = rawDBResults
+                .Select(row => StreakCalculator.ToDateOnly(row["Day"]))
+                .OrderByDescending(day => day)
+                .ToList();
+
+            return StreakCalculator.Compute(days);
+        }
+
+        // Per-day count of completed actions, bounded to the heatmap's display window.
+        private List<CtpDayCountDto> GetActionsByDay()
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = DateTime.Now.Date.AddDays(-HeatmapDays) }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(StatsQueries.GetActionCompletionCountsByDay, parameters);
 
             return rawDBResults.Select(row => new CtpDayCountDto
             {

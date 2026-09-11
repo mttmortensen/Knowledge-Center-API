@@ -211,36 +211,6 @@ namespace Knowledge_Center_API.Services.Core
 
         /* ===================== STATS ===================== */
 
-        // Streak of consecutive days with at least one completed action.
-        public LogStreakDto GetActionStreak()
-        {
-            var rawDBResults = _database.ExecuteQuery(ActionQueries.GetDistinctActionCompletionDays, null);
-
-            var days = rawDBResults
-                .Select(row => StreakCalculator.ToDateOnly(row["Day"]))
-                .OrderByDescending(day => day)
-                .ToList();
-
-            return StreakCalculator.Compute(days);
-        }
-
-        // Per-day count of completed actions, bounded to the given window (for a heatmap).
-        public List<CtpDayCountDto> GetActionHeatmap(int days = StreakCalculator.DefaultHeatmapDays)
-        {
-            var parameters = new List<NpgsqlParameter>
-            {
-                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = DateTime.Now.Date.AddDays(-days) }
-            };
-
-            var rawDBResults = _database.ExecuteQuery(ActionQueries.GetActionCompletionCountsByDay, parameters);
-
-            return rawDBResults.Select(row => new CtpDayCountDto
-            {
-                Date = StreakCalculator.ToDateOnly(row["Date"]).ToDateTime(TimeOnly.MinValue),
-                Count = Convert.ToInt32(row["Count"])
-            }).ToList();
-        }
-
         // Most recently created actions across every knowledge node, with the
         // owning node's title attached so dashboards don't need a second round trip.
         public List<RecentActionDto> GetRecentActions(int limit)

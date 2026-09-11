@@ -80,14 +80,32 @@ namespace Knowledge_Center_API.Controllers
                 },
                 Tags = new TagStatsDto { Total = DemoData.Tags.Count },
                 LogStreak = new LogStreakDto { CurrentStreak = 0, LongestStreak = 0, LastEntryDate = null },
+                ActionStreak = BuildDemoActionStreak(),
                 CtpByDay = DemoData.LogEntries
                     .GroupBy(log => log.EntryDate.Date)
+                    .Select(group => new CtpDayCountDto { Date = group.Key, Count = group.Count() })
+                    .ToList(),
+                ActionsByDay = DemoData.Actions
+                    .Where(a => a.CompletedAt.HasValue)
+                    .GroupBy(a => a.CompletedAt.Value.Date)
                     .Select(group => new CtpDayCountDto { Date = group.Key, Count = group.Count() })
                     .ToList(),
                 TopTags = DemoData.Tags
                     .Select(tag => new TagCountDto { TagId = tag.TagId, Name = tag.Name, Count = 1 })
                     .ToList()
             };
+        }
+
+        private static LogStreakDto BuildDemoActionStreak()
+        {
+            var days = DemoData.Actions
+                .Where(a => a.CompletedAt.HasValue)
+                .Select(a => DateOnly.FromDateTime(a.CompletedAt.Value))
+                .Distinct()
+                .OrderByDescending(day => day)
+                .ToList();
+
+            return StreakCalculator.Compute(days);
         }
     }
 }

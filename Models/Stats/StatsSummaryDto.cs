@@ -8,10 +8,12 @@ namespace Knowledge_Center_API.Models.Stats
         public ActionStatsDto Actions { get; set; }
         public TagStatsDto Tags { get; set; }
         public LogStreakDto LogStreak { get; set; }
+        public LogStreakDto ActionStreak { get; set; }
 
-        // Dashboard-specific additions: a per-day CTP breakdown for the contribution
-        // heatmap and the most-used tags.
+        // Dashboard-specific additions: per-day breakdowns for the contribution
+        // heatmaps and the most-used tags.
         public List<CtpDayCountDto> CtpByDay { get; set; } = new();
+        public List<CtpDayCountDto> ActionsByDay { get; set; } = new();
         public List<TagCountDto> TopTags { get; set; } = new();
     }
 }

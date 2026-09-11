@@ -72,5 +72,23 @@ namespace Knowledge_Center_API.DataAccess
             ORDER BY COUNT(lt.""LogId"") DESC, t.""Name""
             LIMIT @Limit;
         ";
+
+        // Distinct calendar days that had at least one completed action, most recent first.
+        public static readonly string GetDistinctActionCompletionDays = @"
+            SELECT DISTINCT ""CompletedAt""::date AS ""Day""
+            FROM ""Actions""
+            WHERE ""CompletedAt"" IS NOT NULL
+            ORDER BY ""Day"" DESC;
+        ";
+
+        // Powers the dashboard's actions contribution heatmap: one row per day
+        // that had at least one completed action, bounded to the heatmap's display window.
+        public static readonly string GetActionCompletionCountsByDay = @"
+            SELECT DATE(""CompletedAt"") AS ""Date"", COUNT(*) AS ""Count""
+            FROM ""Actions""
+            WHERE ""CompletedAt"" IS NOT NULL AND ""CompletedAt"" >= @Since
+            GROUP BY DATE(""CompletedAt"")
+            ORDER BY DATE(""CompletedAt"");
+        ";
     }
 }

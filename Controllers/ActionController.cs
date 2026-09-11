@@ -129,37 +129,6 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
-        /// Retrieves the current/longest streak of consecutive days with at least one completed action.
-        /// </summary>
-        [HttpGet("streak")]
-        public IActionResult GetStreak()
-        {
-            if (User.HasClaim("demo", "true"))
-            {
-                return Ok(BuildDemoStreak());
-            }
-
-            var streak = _actionService.GetActionStreak();
-            return Ok(streak);
-        }
-
-        /// <summary>
-        /// Retrieves a per-day count of completed actions for a contribution-style heatmap.
-        /// </summary>
-        /// <param name="days">Size of the trailing window, in days.</param>
-        [HttpGet("heatmap")]
-        public IActionResult GetHeatmap([FromQuery] int days = StreakCalculator.DefaultHeatmapDays)
-        {
-            if (User.HasClaim("demo", "true"))
-            {
-                return Ok(BuildDemoHeatmap(days));
-            }
-
-            var heatmap = _actionService.GetActionHeatmap(days);
-            return Ok(heatmap);
-        }
-
-        /// <summary>
         /// Retrieves the most recently created actions across every knowledge node.
         /// </summary>
         /// <param name="limit">Maximum number of actions to return.</param>
@@ -331,30 +300,6 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "Action not found or delete failed." });
 
             return Ok(new { message = "Action deleted successfully." });
-        }
-
-        private static LogStreakDto BuildDemoStreak()
-        {
-            var days = DemoData.Actions
-                .Where(a => a.CompletedAt.HasValue)
-                .Select(a => DateOnly.FromDateTime(a.CompletedAt.Value))
-                .Distinct()
-                .OrderByDescending(day => day)
-                .ToList();
-
-            return StreakCalculator.Compute(days);
-        }
-
-        private static List<CtpDayCountDto> BuildDemoHeatmap(int days)
-        {
-            var since = DateTime.Now.Date.AddDays(-days);
-
-            return DemoData.Actions
-                .Where(a => a.CompletedAt.HasValue && a.CompletedAt.Value >= since)
-                .GroupBy(a => a.CompletedAt.Value.Date)
-                .OrderBy(group => group.Key)
-                .Select(group => new CtpDayCountDto { Date = group.Key, Count = group.Count() })
-                .ToList();
         }
 
         private static List<RecentActionDto> BuildDemoRecent(int limit)
