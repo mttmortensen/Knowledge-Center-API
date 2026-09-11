@@ -96,66 +96,17 @@ namespace Knowledge_Center_API.Services.Core
             var rawDBResults = _database.ExecuteQuery(StatsQueries.GetDistinctLogEntryDays, null);
 
             var days = rawDBResults
-                .Select(row => ToDateOnly(row["Day"]))
+                .Select(row => StreakCalculator.ToDateOnly(row["Day"]))
                 .OrderByDescending(day => day)
                 .ToList();
 
-            if (days.Count == 0)
-            {
-                return new LogStreakDto { CurrentStreak = 0, LongestStreak = 0, LastEntryDate = null };
-            }
-
-            int longestStreak = 1;
-            int runLength = 1;
-            for (int i = 1; i < days.Count; i++)
-            {
-                if (days[i - 1].DayNumber - days[i].DayNumber == 1)
-                {
-                    runLength++;
-                }
-                else
-                {
-                    longestStreak = Math.Max(longestStreak, runLength);
-                    runLength = 1;
-                }
-            }
-            longestStreak = Math.Max(longestStreak, runLength);
-
-            // Current streak only holds if the most recent logged day was today or
-            // yesterday — anything older means the streak already broke, even though
-            // there's still a run of consecutive days sitting further back in history.
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            int currentStreak = 0;
-            if (days[0] == today || days[0] == today.AddDays(-1))
-            {
-                currentStreak = 1;
-                for (int i = 1; i < days.Count; i++)
-                {
-                    if (days[i - 1].DayNumber - days[i].DayNumber == 1)
-                        currentStreak++;
-                    else
-                        break;
-                }
-            }
-
-            return new LogStreakDto
-            {
-                CurrentStreak = currentStreak,
-                LongestStreak = longestStreak,
-                LastEntryDate = days[0].ToDateTime(TimeOnly.MinValue)
-            };
+            return StreakCalculator.Compute(days);
         }
 
         // Npgsql maps a Postgres "date" column to System.DateOnly by default, but
         // Database.ExecuteQuery hands back plain object values — guard the DateTime
         // conversion path too in case that mapping ever changes.
-        private static DateOnly ToDateOnly(object value)
-        {
-            if (value is DateOnly dateOnly)
-                return dateOnly;
-
-            return DateOnly.FromDateTime(Convert.ToDateTime(value));
-        }
+        private static DateOnly ToDateOnly(object value) => StreakCalculator.ToDateOnly(value);
 
         private List<CtpDayCountDto> GetCtpByDay()
         {

@@ -1,5 +1,6 @@
 using Knowledge_Center_API.DataAccess;
 using Knowledge_Center_API.Models.Actions;
+using Knowledge_Center_API.Models.Stats;
 using Knowledge_Center_API.Services.Validation;
 using Npgsql;
 using NpgsqlTypes;
@@ -8,6 +9,8 @@ namespace Knowledge_Center_API.Services.Core
 {
     public class ActionService
     {
+        private const int DefaultHeatmapDays = 371; // ~53 weeks, matches the frontend's contribution calendar window
+
         private readonly Database _database;
         private readonly KnowledgeNodeService _knService;
 
@@ -206,6 +209,38 @@ namespace Knowledge_Center_API.Services.Core
             // delete), not a failure — unlike DeleteActionItem, this isn't a lookup-by-id.
             _database.ExecuteNonQuery(ActionQueries.DeleteAllActionsByNodeId, parameters);
             return true;
+        }
+
+        /* ===================== STATS ===================== */
+
+        // Streak of consecutive days with at least one completed action.
+        public LogStreakDto GetActionStreak()
+        {
+            var rawDBResults = _database.ExecuteQuery(ActionQueries.GetDistinctActionCompletionDays, null);
+
+            var days = rawDBResults
+                .Select(row => StreakCalculator.ToDateOnly(row["Day"]))
+                .OrderByDescending(day => day)
+                .ToList();
+
+            return StreakCalculator.Compute(days);
+        }
+
+        // Per-day count of completed actions, bounded to the given window (for a heatmap).
+        public List<CtpDayCountDto> GetActionHeatmap(int days = DefaultHeatmapDays)
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = DateTime.Now.Date.AddDays(-days) }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(ActionQueries.GetActionCompletionCountsByDay, parameters);
+
+            return rawDBResults.Select(row => new CtpDayCountDto
+            {
+                Date = StreakCalculator.ToDateOnly(row["Date"]).ToDateTime(TimeOnly.MinValue),
+                Count = Convert.ToInt32(row["Count"])
+            }).ToList();
         }
 
         /* ===================== DATA TYPE CONVERTERS (MAPPERS) ===================== */

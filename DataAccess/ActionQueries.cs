@@ -67,5 +67,23 @@ namespace Knowledge_Center_API.DataAccess
             DELETE FROM ""Actions""
             WHERE ""KnowledgeNodeId"" = @KnowledgeNodeId;
         ";
+
+        // Distinct calendar days that had at least one completed action, most recent first.
+        public static readonly string GetDistinctActionCompletionDays = @"
+            SELECT DISTINCT ""CompletedAt""::date AS ""Day""
+            FROM ""Actions""
+            WHERE ""CompletedAt"" IS NOT NULL
+            ORDER BY ""Day"" DESC;
+        ";
+
+        // Powers an actions contribution heatmap: one row per day that had at
+        // least one completed action, bounded to the heatmap's display window.
+        public static readonly string GetActionCompletionCountsByDay = @"
+            SELECT DATE(""CompletedAt"") AS ""Date"", COUNT(*) AS ""Count""
+            FROM ""Actions""
+            WHERE ""CompletedAt"" IS NOT NULL AND ""CompletedAt"" >= @Since
+            GROUP BY DATE(""CompletedAt"")
+            ORDER BY DATE(""CompletedAt"");
+        ";
     }
 }

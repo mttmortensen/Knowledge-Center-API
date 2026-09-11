@@ -1,5 +1,6 @@
 using Knowledge_Center_API.DataAccess.Demo;
 using Knowledge_Center_API.Models.Actions;
+using Knowledge_Center_API.Models.Stats;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,8 @@ namespace Knowledge_Center_API.Controllers
     [Route("/api/actions")]
     public class ActionController : ControllerBase
     {
+        private const int DefaultHeatmapDays = 371; // ~53 weeks, matches the frontend's contribution calendar window
+
         private readonly ActionService _actionService;
 
         public ActionController(ActionService actionService)
@@ -123,6 +126,37 @@ namespace Knowledge_Center_API.Controllers
 
             var openCounts = _actionService.GetOpenActionCountsByNode();
             return Ok(openCounts);
+        }
+
+        /// <summary>
+        /// Retrieves the current/longest streak of consecutive days with at least one completed action.
+        /// </summary>
+        [HttpGet("streak")]
+        public IActionResult GetStreak()
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return Ok(BuildDemoStreak());
+            }
+
+            var streak = _actionService.GetActionStreak();
+            return Ok(streak);
+        }
+
+        /// <summary>
+        /// Retrieves a per-day count of completed actions for a contribution-style heatmap.
+        /// </summary>
+        /// <param name="days">Size of the trailing window, in days.</param>
+        [HttpGet("heatmap")]
+        public IActionResult GetHeatmap([FromQuery] int days = DefaultHeatmapDays)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return Ok(BuildDemoHeatmap(days));
+            }
+
+            var heatmap = _actionService.GetActionHeatmap(days);
+            return Ok(heatmap);
         }
 
         /// <summary>
@@ -281,6 +315,30 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "Action not found or delete failed." });
 
             return Ok(new { message = "Action deleted successfully." });
+        }
+
+        private static LogStreakDto BuildDemoStreak()
+        {
+            var days = DemoData.Actions
+                .Where(a => a.CompletedAt.HasValue)
+                .Select(a => DateOnly.FromDateTime(a.CompletedAt.Value))
+                .Distinct()
+                .OrderByDescending(day => day)
+                .ToList();
+
+            return StreakCalculator.Compute(days);
+        }
+
+        private static List<CtpDayCountDto> BuildDemoHeatmap(int days)
+        {
+            var since = DateTime.Now.Date.AddDays(-days);
+
+            return DemoData.Actions
+                .Where(a => a.CompletedAt.HasValue && a.CompletedAt.Value >= since)
+                .GroupBy(a => a.CompletedAt.Value.Date)
+                .OrderBy(group => group.Key)
+                .Select(group => new CtpDayCountDto { Date = group.Key, Count = group.Count() })
+                .ToList();
         }
     }
 }
