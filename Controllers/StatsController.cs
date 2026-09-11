@@ -79,7 +79,19 @@ namespace Knowledge_Center_API.Controllers
                     Completed = actionCompleted
                 },
                 Tags = new TagStatsDto { Total = DemoData.Tags.Count },
-                LogStreak = new LogStreakDto { CurrentStreak = 0, LongestStreak = 0, LastEntryDate = null }
+                LogStreak = new LogStreakDto { CurrentStreak = 0, LongestStreak = 0, LastEntryDate = null },
+                CtpByDay = DemoData.LogEntries
+                    .Where(log => log.ContributesToProgress)
+                    .GroupBy(log => log.EntryDate.Date)
+                    .Select(group => new CtpDayCountDto { Date = group.Key, Count = group.Count() })
+                    .ToList(),
+                TopTags = DemoData.Tags
+                    .Select(tag => new TagCountDto { TagId = tag.TagId, Name = tag.Name, Count = 1 })
+                    .ToList(),
+                RecentActions = DemoData.Actions
+                    .OrderByDescending(action => action.CreatedAt)
+                    .Take(8)
+                    .ToList()
             };
         }
     }
