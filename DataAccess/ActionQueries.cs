@@ -72,6 +72,7 @@ namespace Knowledge_Center_API.DataAccess
             SELECT a.*, kn.""Title"" AS ""KnowledgeNodeTitle""
             FROM ""Actions"" a
             INNER JOIN ""KnowledgeNodes"" kn ON kn.""Id"" = a.""KnowledgeNodeId""
+            WHERE a.""Status"" = 'Open'
             ORDER BY a.""CreatedAt"" DESC
             LIMIT @Limit;
         ";

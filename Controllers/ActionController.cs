@@ -16,7 +16,7 @@ namespace Knowledge_Center_API.Controllers
     [Route("/api/actions")]
     public class ActionController : ControllerBase
     {
-        private const int DefaultRecentActionsLimit = 8;
+        private const int DefaultRecentActionsLimit = 5;
 
         private readonly ActionService _actionService;
 
@@ -129,7 +129,7 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
-        /// Retrieves the most recently created actions across every knowledge node.
+        /// Retrieves the most recently created open actions across every knowledge node.
         /// </summary>
         /// <param name="limit">Maximum number of actions to return.</param>
         [HttpGet("recent")]
@@ -305,6 +305,7 @@ namespace Knowledge_Center_API.Controllers
         private static List<RecentActionDto> BuildDemoRecent(int limit)
         {
             return DemoData.Actions
+                .Where(action => action.Status == "Open")
                 .OrderByDescending(action => action.CreatedAt)
                 .Take(limit)
                 .Select(action => new RecentActionDto
