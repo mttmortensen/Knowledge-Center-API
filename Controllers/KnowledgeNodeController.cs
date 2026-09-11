@@ -75,7 +75,6 @@ namespace Knowledge_Center_API.Controllers
                         Title = log.Title,
                         Content = log.Content,
                         EntryDate = log.EntryDate,
-                        ContributesToProgress = log.ContributesToProgress,
                         ChatURL = log.ChatURL
                     })
                     .ToList();

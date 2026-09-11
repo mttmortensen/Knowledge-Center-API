@@ -10,9 +10,9 @@ namespace Knowledge_Center_API.DataAccess
     {
         public static readonly string InsertLogEntry = @"
             INSERT INTO ""LogEntries""
-                (""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ContributesToProgress"", ""ChatURL"")
+                (""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ChatURL"")
             VALUES
-                (@NodeId, @EntryDate, @Title, @Content, @ContributesToProgress, @ChatURL)
+                (@NodeId, @EntryDate, @Title, @Content, @ChatURL)
             RETURNING ""LogId"";
         ";
 
@@ -37,7 +37,7 @@ namespace Knowledge_Center_API.DataAccess
         // Removing GetAllLogsWithTags query since now
         // We are building out the logs and tags in the service layer.
         public static readonly string GetAllLogsWithoutTags = @"
-            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ContributesToProgress"", ""ChatURL""
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ChatURL""
             FROM ""LogEntries""
             ORDER BY ""EntryDate"" DESC;
         ";
@@ -50,7 +50,7 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByLogId = @"
-            SELECT ltr.""LogId"", le.""NodeId"", le.""EntryDate"", le.""Content"", le.""ContributesToProgress"", le.""ChatURL"",
+            SELECT ltr.""LogId"", le.""NodeId"", le.""EntryDate"", le.""Content"", le.""ChatURL"",
                    ltr.""TagId"", t.""Name"" AS ""TagName""
             FROM ""LogEntries"" le
             LEFT JOIN ""LogTagRelations"" ltr ON le.""LogId"" = ltr.""LogId""
@@ -60,7 +60,7 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByIdWithoutTags = @"
-            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ContributesToProgress"", ""ChatURL""
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ChatURL""
             FROM ""LogEntries""
             WHERE ""LogId"" = @LogId;
         ";
@@ -83,7 +83,7 @@ namespace Knowledge_Center_API.DataAccess
 
         public static readonly string UpdateLogEntryContent = @"
             UPDATE ""LogEntries""
-            SET ""Title"" = @Title, ""Content"" = @Content, ""ContributesToProgress"" = @ContributesToProgress
+            SET ""Title"" = @Title, ""Content"" = @Content
             WHERE ""LogId"" = @LogId;
         ";
 

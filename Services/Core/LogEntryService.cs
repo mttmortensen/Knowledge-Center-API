@@ -29,7 +29,6 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = dto.NodeId,
                 Title = dto.Title,
                 Content = dto.Content,
-                ContributesToProgress = dto.ContributesToProgress,
                 ChatURL = dto.ChatURL,
                 Tags = new List<Tags>()
             };
@@ -64,7 +63,6 @@ namespace Knowledge_Center_API.Services.Core
                 new NpgsqlParameter("@EntryDate", NpgsqlDbType.Timestamp) { Value = log.EntryDate },
                 new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(log.Title) ? DBNull.Value : log.Title },
                 new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = log.Content },
-                new NpgsqlParameter("@ContributesToProgress", NpgsqlDbType.Boolean) { Value = log.ContributesToProgress },
                 new NpgsqlParameter("@ChatURL", NpgsqlDbType.Varchar, 2000) { Value = string.IsNullOrWhiteSpace(log.ChatURL) ? DBNull.Value : log.ChatURL }
             };
 
@@ -126,7 +124,6 @@ namespace Knowledge_Center_API.Services.Core
             // only fields the caller actually sent replace what's already stored.
             string newTitle = dto.Title ?? existing.Title;
             string newContent = !string.IsNullOrWhiteSpace(dto.Content) ? dto.Content : existing.Content;
-            bool newContributesToProgress = dto.ContributesToProgress ?? existing.ContributesToProgress;
 
             FieldValidator.ValidateRequiredString(newContent, "Log Content", 200_000);
             FieldValidator.ValidateOptionalString(newTitle, "Title", 200);
@@ -135,8 +132,7 @@ namespace Knowledge_Center_API.Services.Core
             {
                 new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
                 new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(newTitle) ? DBNull.Value : newTitle },
-                new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = newContent },
-                new NpgsqlParameter("@ContributesToProgress", NpgsqlDbType.Boolean) { Value = newContributesToProgress }
+                new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = newContent }
             };
 
             int rowsAffected = _database.ExecuteNonQuery(LogEntryQueries.UpdateLogEntryContent, parameters);
@@ -183,7 +179,6 @@ namespace Knowledge_Center_API.Services.Core
                     EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                     Title = rawDBRow["Title"]?.ToString(),
                     Content = rawDBRow["Content"].ToString(),
-                    ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
                     ChatURL = rawDBRow["ChatURL"]?.ToString(),
                     Tags = new() // Placeholder
                 });
@@ -237,7 +232,6 @@ namespace Knowledge_Center_API.Services.Core
                 EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                 Title = rawDBRow["Title"]?.ToString(),
                 Content = rawDBRow["Content"].ToString(),
-                ContributesToProgress = Convert.ToBoolean(rawDBRow["ContributesToProgress"]),
                 ChatURL = rawDBRow["ChatURL"]?.ToString(),
                 Tags = new List<Tags>()
             };
@@ -284,7 +278,6 @@ namespace Knowledge_Center_API.Services.Core
                 EntryDate = Convert.ToDateTime(row["EntryDate"]),
                 Title = row["Title"]?.ToString(),
                 Content = row["Content"].ToString(),
-                ContributesToProgress = Convert.ToBoolean(row["ContributesToProgress"]),
                 ChatURL = row["ChatURL"]?.ToString()
             })
             .ToList();

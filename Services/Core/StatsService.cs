@@ -54,13 +54,11 @@ namespace Knowledge_Center_API.Services.Core
         private LogEntryStatsDto GetLogEntryStats()
         {
             int total = _database.ExecuteScalar<int>(StatsQueries.CountLogEntriesTotal, null);
-            int contributing = _database.ExecuteScalar<int>(StatsQueries.CountLogEntriesContributingToProgress, null);
             int withTitle = _database.ExecuteScalar<int>(StatsQueries.CountLogEntriesWithTitle, null);
 
             return new LogEntryStatsDto
             {
                 Total = total,
-                ContributingToProgress = contributing,
                 WithTitle = withTitle,
                 WithoutTitle = total - withTitle
             };

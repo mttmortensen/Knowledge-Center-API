@@ -122,7 +122,6 @@ namespace Knowledge_Center_API.DataAccess.Demo
                         Title = hasTitle ? $"Session {e + 1}: {node.Title}" : null,
                         Content = string.Format(template, node.Title),
                         Tags = tags,
-                        ContributesToProgress = logId % 4 != 3,
                         ChatURL = logId % 6 == 0 ? "https://chat.openai.com/share/demo-session" : null
                     });
 

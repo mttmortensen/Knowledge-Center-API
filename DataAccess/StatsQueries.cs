@@ -24,11 +24,6 @@ namespace Knowledge_Center_API.DataAccess
             SELECT COUNT(*) FROM ""LogEntries"";
         ";
 
-        public static readonly string CountLogEntriesContributingToProgress = @"
-            SELECT COUNT(*) FROM ""LogEntries""
-            WHERE ""ContributesToProgress"" = TRUE;
-        ";
-
         public static readonly string CountLogEntriesWithTitle = @"
             SELECT COUNT(*) FROM ""LogEntries""
             WHERE ""Title"" IS NOT NULL AND TRIM(""Title"") <> '';
@@ -52,9 +47,7 @@ namespace Knowledge_Center_API.DataAccess
             SELECT COUNT(*) FROM ""Tags"";
         ";
 
-        // Distinct calendar days that had at least one log entry (any entry, regardless
-        // of ContributesToProgress — that flag marks per-node progress like a commit,
-        // not daily-logging-habit activity), most recent first.
+        // Distinct calendar days that had at least one log entry, most recent first.
         public static readonly string GetDistinctLogEntryDays = @"
             SELECT DISTINCT ""EntryDate""::date AS ""Day""
             FROM ""LogEntries""

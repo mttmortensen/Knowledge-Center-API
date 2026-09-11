@@ -48,7 +48,6 @@ CREATE TABLE "LogEntries" (
     "EntryDate" TIMESTAMP NOT NULL,
     "Title" VARCHAR(200),
     "Content" TEXT,
-    "ContributesToProgress" BOOLEAN NOT NULL,
     "ChatURL" VARCHAR(2000),
     CONSTRAINT "FK_LogEntries_KnowledgeNodes" FOREIGN KEY ("NodeId") REFERENCES "KnowledgeNodes" ("Id")
 );

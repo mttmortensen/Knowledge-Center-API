@@ -46,7 +46,6 @@ namespace Knowledge_Center_API.Controllers
             int knArchived = DemoData.KnowledgeNodes.Count(kn => kn.IsArchived);
 
             int logTotal = DemoData.LogEntries.Count;
-            int logContributing = DemoData.LogEntries.Count(l => l.ContributesToProgress);
             int logWithTitle = DemoData.LogEntries.Count(l => !string.IsNullOrWhiteSpace(l.Title));
 
             int actionTotal = DemoData.Actions.Count;
@@ -70,7 +69,6 @@ namespace Knowledge_Center_API.Controllers
                 LogEntries = new LogEntryStatsDto
                 {
                     Total = logTotal,
-                    ContributingToProgress = logContributing,
                     WithTitle = logWithTitle,
                     WithoutTitle = logTotal - logWithTitle
                 },
