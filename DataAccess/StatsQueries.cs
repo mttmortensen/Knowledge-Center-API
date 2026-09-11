@@ -74,8 +74,10 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
         public static readonly string GetRecentActions = @"
-            SELECT * FROM ""Actions""
-            ORDER BY ""CreatedAt"" DESC
+            SELECT a.*, kn.""Title"" AS ""KnowledgeNodeTitle""
+            FROM ""Actions"" a
+            INNER JOIN ""KnowledgeNodes"" kn ON kn.""Id"" = a.""KnowledgeNodeId""
+            ORDER BY a.""CreatedAt"" DESC
             LIMIT @Limit;
         ";
     }

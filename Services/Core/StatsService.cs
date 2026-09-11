@@ -1,5 +1,4 @@
 using Knowledge_Center_API.DataAccess;
-using Knowledge_Center_API.Models.Actions;
 using Knowledge_Center_API.Models.Stats;
 using Npgsql;
 using NpgsqlTypes;
@@ -191,7 +190,7 @@ namespace Knowledge_Center_API.Services.Core
             }).ToList();
         }
 
-        private List<ActionItem> GetRecentActions(int limit)
+        private List<RecentActionDto> GetRecentActions(int limit)
         {
             var parameters = new List<NpgsqlParameter>
             {
@@ -199,22 +198,19 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             var rawDBResults = _database.ExecuteQuery(StatsQueries.GetRecentActions, parameters);
-            return rawDBResults.Select(ConvertDBRowToActionItem).ToList();
-        }
 
-        private ActionItem ConvertDBRowToActionItem(Dictionary<string, object> rawDBRow)
-        {
-            return new ActionItem
+            return rawDBResults.Select(row => new RecentActionDto
             {
-                Id = Convert.ToInt32(rawDBRow["Id"]),
-                KnowledgeNodeId = Convert.ToInt32(rawDBRow["KnowledgeNodeId"]),
-                ActionText = rawDBRow["ActionText"].ToString(),
-                Status = rawDBRow["Status"].ToString(),
-                CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
-                CompletedAt = rawDBRow["CompletedAt"] == null || rawDBRow["CompletedAt"] == DBNull.Value
+                Id = Convert.ToInt32(row["Id"]),
+                KnowledgeNodeId = Convert.ToInt32(row["KnowledgeNodeId"]),
+                KnowledgeNodeTitle = row["KnowledgeNodeTitle"].ToString(),
+                ActionText = row["ActionText"].ToString(),
+                Status = row["Status"].ToString(),
+                CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
+                CompletedAt = row["CompletedAt"] == null || row["CompletedAt"] == DBNull.Value
                     ? (DateTime?)null
-                    : Convert.ToDateTime(rawDBRow["CompletedAt"])
-            };
+                    : Convert.ToDateTime(row["CompletedAt"])
+            }).ToList();
         }
     }
 }
