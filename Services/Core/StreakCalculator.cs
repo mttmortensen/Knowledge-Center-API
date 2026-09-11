@@ -6,6 +6,11 @@ namespace Knowledge_Center_API.Services.Core
     // stats, used for both LogEntries and Actions.
     public static class StreakCalculator
     {
+        // ~53 weeks, matches the frontend's contribution calendar window. Shared
+        // default so LogEntries and Actions heatmaps stay in sync without each
+        // resource redefining its own magic number.
+        public const int DefaultHeatmapDays = 371;
+
         public static LogStreakDto Compute(List<DateOnly> daysDescending)
         {
             if (daysDescending.Count == 0)

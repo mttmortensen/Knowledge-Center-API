@@ -9,7 +9,6 @@ namespace Knowledge_Center_API.Services.Core
     {
         private const int HeatmapDays = 371; // ~53 weeks, matches the frontend's contribution calendar window
         private const int TopTagsLimit = 8;
-        private const int RecentActionsLimit = 8;
 
         private readonly Database _database;
 
@@ -29,8 +28,7 @@ namespace Knowledge_Center_API.Services.Core
                 Tags = GetTagStats(),
                 LogStreak = GetLogStreak(),
                 CtpByDay = GetCtpByDay(),
-                TopTags = GetTopTags(TopTagsLimit),
-                RecentActions = GetRecentActions(RecentActionsLimit)
+                TopTags = GetTopTags(TopTagsLimit)
             };
         }
 
@@ -138,29 +136,6 @@ namespace Knowledge_Center_API.Services.Core
                 TagId = Convert.ToInt32(row["TagId"]),
                 Name = row["Name"].ToString(),
                 Count = Convert.ToInt32(row["Count"])
-            }).ToList();
-        }
-
-        private List<RecentActionDto> GetRecentActions(int limit)
-        {
-            var parameters = new List<NpgsqlParameter>
-            {
-                new NpgsqlParameter("@Limit", NpgsqlDbType.Integer) { Value = limit }
-            };
-
-            var rawDBResults = _database.ExecuteQuery(StatsQueries.GetRecentActions, parameters);
-
-            return rawDBResults.Select(row => new RecentActionDto
-            {
-                Id = Convert.ToInt32(row["Id"]),
-                KnowledgeNodeId = Convert.ToInt32(row["KnowledgeNodeId"]),
-                KnowledgeNodeTitle = row["KnowledgeNodeTitle"].ToString(),
-                ActionText = row["ActionText"].ToString(),
-                Status = row["Status"].ToString(),
-                CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
-                CompletedAt = row["CompletedAt"] == null || row["CompletedAt"] == DBNull.Value
-                    ? (DateTime?)null
-                    : Convert.ToDateTime(row["CompletedAt"])
             }).ToList();
         }
     }

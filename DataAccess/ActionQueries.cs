@@ -85,5 +85,13 @@ namespace Knowledge_Center_API.DataAccess
             GROUP BY DATE(""CompletedAt"")
             ORDER BY DATE(""CompletedAt"");
         ";
+
+        public static readonly string GetRecentActions = @"
+            SELECT a.*, kn.""Title"" AS ""KnowledgeNodeTitle""
+            FROM ""Actions"" a
+            INNER JOIN ""KnowledgeNodes"" kn ON kn.""Id"" = a.""KnowledgeNodeId""
+            ORDER BY a.""CreatedAt"" DESC
+            LIMIT @Limit;
+        ";
     }
 }

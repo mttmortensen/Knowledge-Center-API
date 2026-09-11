@@ -86,21 +86,6 @@ namespace Knowledge_Center_API.Controllers
                     .ToList(),
                 TopTags = DemoData.Tags
                     .Select(tag => new TagCountDto { TagId = tag.TagId, Name = tag.Name, Count = 1 })
-                    .ToList(),
-                RecentActions = DemoData.Actions
-                    .OrderByDescending(action => action.CreatedAt)
-                    .Take(8)
-                    .Select(action => new RecentActionDto
-                    {
-                        Id = action.Id,
-                        KnowledgeNodeId = action.KnowledgeNodeId,
-                        KnowledgeNodeTitle = DemoData.KnowledgeNodes
-                            .FirstOrDefault(kn => kn.Id == action.KnowledgeNodeId)?.Title ?? "",
-                        ActionText = action.ActionText,
-                        Status = action.Status,
-                        CreatedAt = action.CreatedAt,
-                        CompletedAt = action.CompletedAt
-                    })
                     .ToList()
             };
         }

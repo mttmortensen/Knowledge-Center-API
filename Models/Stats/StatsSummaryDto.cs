@@ -10,9 +10,8 @@ namespace Knowledge_Center_API.Models.Stats
         public LogStreakDto LogStreak { get; set; }
 
         // Dashboard-specific additions: a per-day CTP breakdown for the contribution
-        // heatmap, the most-used tags, and the most recently created actions.
+        // heatmap and the most-used tags.
         public List<CtpDayCountDto> CtpByDay { get; set; } = new();
         public List<TagCountDto> TopTags { get; set; } = new();
-        public List<RecentActionDto> RecentActions { get; set; } = new();
     }
 }

@@ -9,8 +9,6 @@ namespace Knowledge_Center_API.Services.Core
 {
     public class ActionService
     {
-        private const int DefaultHeatmapDays = 371; // ~53 weeks, matches the frontend's contribution calendar window
-
         private readonly Database _database;
         private readonly KnowledgeNodeService _knService;
 
@@ -227,7 +225,7 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         // Per-day count of completed actions, bounded to the given window (for a heatmap).
-        public List<CtpDayCountDto> GetActionHeatmap(int days = DefaultHeatmapDays)
+        public List<CtpDayCountDto> GetActionHeatmap(int days = StreakCalculator.DefaultHeatmapDays)
         {
             var parameters = new List<NpgsqlParameter>
             {
@@ -240,6 +238,31 @@ namespace Knowledge_Center_API.Services.Core
             {
                 Date = StreakCalculator.ToDateOnly(row["Date"]).ToDateTime(TimeOnly.MinValue),
                 Count = Convert.ToInt32(row["Count"])
+            }).ToList();
+        }
+
+        // Most recently created actions across every knowledge node, with the
+        // owning node's title attached so dashboards don't need a second round trip.
+        public List<RecentActionDto> GetRecentActions(int limit)
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Limit", NpgsqlDbType.Integer) { Value = limit }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(ActionQueries.GetRecentActions, parameters);
+
+            return rawDBResults.Select(row => new RecentActionDto
+            {
+                Id = Convert.ToInt32(row["Id"]),
+                KnowledgeNodeId = Convert.ToInt32(row["KnowledgeNodeId"]),
+                KnowledgeNodeTitle = row["KnowledgeNodeTitle"].ToString(),
+                ActionText = row["ActionText"].ToString(),
+                Status = row["Status"].ToString(),
+                CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
+                CompletedAt = row["CompletedAt"] == null || row["CompletedAt"] == DBNull.Value
+                    ? (DateTime?)null
+                    : Convert.ToDateTime(row["CompletedAt"])
             }).ToList();
         }
 
