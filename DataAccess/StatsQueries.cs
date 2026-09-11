@@ -55,11 +55,11 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
         // Powers the dashboard's GitHub-style contribution heatmap: one row per day
-        // that had at least one CTP entry, bounded to the heatmap's display window.
+        // that had at least one log entry, bounded to the heatmap's display window.
         public static readonly string GetCtpCountsByDay = @"
             SELECT DATE(""EntryDate"") AS ""Date"", COUNT(*) AS ""Count""
             FROM ""LogEntries""
-            WHERE ""ContributesToProgress"" = TRUE AND ""EntryDate"" >= @Since
+            WHERE ""EntryDate"" >= @Since
             GROUP BY DATE(""EntryDate"")
             ORDER BY DATE(""EntryDate"");
         ";

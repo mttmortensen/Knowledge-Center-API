@@ -81,7 +81,6 @@ namespace Knowledge_Center_API.Controllers
                 Tags = new TagStatsDto { Total = DemoData.Tags.Count },
                 LogStreak = new LogStreakDto { CurrentStreak = 0, LongestStreak = 0, LastEntryDate = null },
                 CtpByDay = DemoData.LogEntries
-                    .Where(log => log.ContributesToProgress)
                     .GroupBy(log => log.EntryDate.Date)
                     .Select(group => new CtpDayCountDto { Date = group.Key, Count = group.Count() })
                     .ToList(),
