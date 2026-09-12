@@ -34,8 +34,11 @@ namespace Knowledge_Center_API.Controllers
             // Demo mode: Read-only
             if (User.HasClaim("demo", "true"))
             {
-                // Use in-memory demo data
-                return Ok(DemoData.LogEntries);
+                // Use in-memory demo data, honouring the same nodeId filter
+                // the live path applies so a demo KN page shows only its own logs.
+                return Ok(nodeId.HasValue
+                    ? DemoData.LogEntries.Where(lg => lg.NodeId == nodeId.Value)
+                    : DemoData.LogEntries);
             }
 
             var logs = nodeId.HasValue
