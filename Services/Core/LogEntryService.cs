@@ -271,16 +271,47 @@ namespace Knowledge_Center_API.Services.Core
 
             var rawResults = _database.ExecuteQuery(LogEntryQueries.GetLogsByNodeId, parameters);
 
-            return rawResults.Select(row => new LogEntry
+            var logEntries = rawResults.Select(row => new LogEntry
             {
                 LogId = Convert.ToInt32(row["LogId"]),
                 NodeId = Convert.ToInt32(row["NodeId"]),
                 EntryDate = Convert.ToDateTime(row["EntryDate"]),
                 Title = row["Title"]?.ToString(),
                 Content = row["Content"].ToString(),
-                ChatURL = row["ChatURL"]?.ToString()
+                ChatURL = row["ChatURL"]?.ToString(),
+                Tags = new() // Placeholder
             })
             .ToList();
+
+            if (logEntries.Count == 0) return logEntries;
+
+            // Same two-step shape as GetAllLogEntries, just scoped to this node's logs,
+            // so /logs?nodeId=... returns tags instead of an empty list.
+            var tagParams = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = nodeId }
+            };
+
+            var tagResults = _database.ExecuteQuery(LogEntryQueries.GetLogTagRelationsByNodeId, tagParams);
+
+            var logTagMap = tagResults
+                .GroupBy(r => Convert.ToInt32(r["LogId"]))
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t => new Tags
+                    {
+                        TagId = Convert.ToInt32(t["TagId"]),
+                        Name = t["TagName"].ToString()
+                    }).ToList()
+                );
+
+            foreach (var log in logEntries)
+            {
+                if (logTagMap.ContainsKey(log.LogId))
+                    log.Tags = logTagMap[log.LogId];
+            }
+
+            return logEntries;
         }
 
         // === DELETE ===

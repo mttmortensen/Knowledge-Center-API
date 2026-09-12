@@ -49,6 +49,15 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
 
+        public static readonly string GetLogTagRelationsByNodeId = @"
+            SELECT lt.""LogId"", t.""TagId"", t.""Name"" AS ""TagName""
+            FROM ""LogEntryTags"" lt
+            INNER JOIN ""Tags"" t ON lt.""TagId"" = t.""TagId""
+            INNER JOIN ""LogEntries"" le ON le.""LogId"" = lt.""LogId""
+            WHERE le.""NodeId"" = @NodeId;
+        ";
+
+
         public static readonly string GetLogByLogId = @"
             SELECT ltr.""LogId"", le.""NodeId"", le.""EntryDate"", le.""Content"", le.""ChatURL"",
                    ltr.""TagId"", t.""Name"" AS ""TagName""
