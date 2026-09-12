@@ -29,7 +29,6 @@ namespace Knowledge_Center_API.Services.Core
                 NodeId = dto.NodeId,
                 Title = dto.Title,
                 Content = dto.Content,
-                ChatURL = dto.ChatURL,
                 Tags = new List<Tags>()
             };
 
@@ -51,7 +50,6 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateId(log.NodeId, "KnowledgeNode ID");
             FieldValidator.ValidateRequiredString(log.Content, "Log Content", 200_000);
             FieldValidator.ValidateOptionalString(log.Title, "Title", 200);
-            FieldValidator.ValidateOptionalChatURL(log.ChatURL, "Chat URL", 2000);
 
 
             // Set timestamp
@@ -62,8 +60,7 @@ namespace Knowledge_Center_API.Services.Core
                 new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = log.NodeId },
                 new NpgsqlParameter("@EntryDate", NpgsqlDbType.Timestamp) { Value = log.EntryDate },
                 new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(log.Title) ? DBNull.Value : log.Title },
-                new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = log.Content },
-                new NpgsqlParameter("@ChatURL", NpgsqlDbType.Varchar, 2000) { Value = string.IsNullOrWhiteSpace(log.ChatURL) ? DBNull.Value : log.ChatURL }
+                new NpgsqlParameter("@Content", NpgsqlDbType.Text) { Value = log.Content }
             };
 
 
@@ -139,26 +136,6 @@ namespace Knowledge_Center_API.Services.Core
             return rowsAffected > 0;
         }
 
-        public bool UpdateChatURL(int logId, string? chatURL)
-        {
-            FieldValidator.ValidateId(logId, "Log ID");
-            FieldValidator.ValidateOptionalChatURL(chatURL, "Chat URL", 2000);
-
-            var parameters = new List<NpgsqlParameter> 
-            {
-                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
-                new NpgsqlParameter("@ChatURL", NpgsqlDbType.Varchar, 2000) 
-                {
-                    Value = string.IsNullOrWhiteSpace(chatURL) ? DBNull.Value : chatURL
-                }
-            };
-
-            int rowsAffected = _database.ExecuteNonQuery(LogEntryQueries.UpdateChatURLByLogId, parameters);
-
-            return rowsAffected > 0;
-        }
-
-
         // === READ ===
 
         public List<LogEntry> GetAllLogEntries()
@@ -179,7 +156,6 @@ namespace Knowledge_Center_API.Services.Core
                     EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                     Title = rawDBRow["Title"]?.ToString(),
                     Content = rawDBRow["Content"].ToString(),
-                    ChatURL = rawDBRow["ChatURL"]?.ToString(),
                     Tags = new() // Placeholder
                 });
             }
@@ -232,7 +208,6 @@ namespace Knowledge_Center_API.Services.Core
                 EntryDate = Convert.ToDateTime(rawDBRow["EntryDate"]),
                 Title = rawDBRow["Title"]?.ToString(),
                 Content = rawDBRow["Content"].ToString(),
-                ChatURL = rawDBRow["ChatURL"]?.ToString(),
                 Tags = new List<Tags>()
             };
 
@@ -278,7 +253,6 @@ namespace Knowledge_Center_API.Services.Core
                 EntryDate = Convert.ToDateTime(row["EntryDate"]),
                 Title = row["Title"]?.ToString(),
                 Content = row["Content"].ToString(),
-                ChatURL = row["ChatURL"]?.ToString(),
                 Tags = new() // Placeholder
             })
             .ToList();

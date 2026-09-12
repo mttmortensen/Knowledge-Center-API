@@ -74,8 +74,7 @@ namespace Knowledge_Center_API.Controllers
                         LogId = log.LogId,
                         Title = log.Title,
                         Content = log.Content,
-                        EntryDate = log.EntryDate,
-                        ChatURL = log.ChatURL
+                        EntryDate = log.EntryDate
                     })
                     .ToList();
 

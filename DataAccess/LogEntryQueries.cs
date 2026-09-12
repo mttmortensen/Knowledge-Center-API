@@ -10,9 +10,9 @@ namespace Knowledge_Center_API.DataAccess
     {
         public static readonly string InsertLogEntry = @"
             INSERT INTO ""LogEntries""
-                (""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ChatURL"")
+                (""NodeId"", ""EntryDate"", ""Title"", ""Content"")
             VALUES
-                (@NodeId, @EntryDate, @Title, @Content, @ChatURL)
+                (@NodeId, @EntryDate, @Title, @Content)
             RETURNING ""LogId"";
         ";
 
@@ -37,7 +37,7 @@ namespace Knowledge_Center_API.DataAccess
         // Removing GetAllLogsWithTags query since now
         // We are building out the logs and tags in the service layer.
         public static readonly string GetAllLogsWithoutTags = @"
-            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ChatURL""
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content""
             FROM ""LogEntries""
             ORDER BY ""EntryDate"" DESC;
         ";
@@ -59,7 +59,7 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByLogId = @"
-            SELECT ltr.""LogId"", le.""NodeId"", le.""EntryDate"", le.""Content"", le.""ChatURL"",
+            SELECT ltr.""LogId"", le.""NodeId"", le.""EntryDate"", le.""Content"",
                    ltr.""TagId"", t.""Name"" AS ""TagName""
             FROM ""LogEntries"" le
             LEFT JOIN ""LogTagRelations"" ltr ON le.""LogId"" = ltr.""LogId""
@@ -69,7 +69,7 @@ namespace Knowledge_Center_API.DataAccess
 
 
         public static readonly string GetLogByIdWithoutTags = @"
-            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content"", ""ChatURL""
+            SELECT ""LogId"", ""NodeId"", ""EntryDate"", ""Title"", ""Content""
             FROM ""LogEntries""
             WHERE ""LogId"" = @LogId;
         ";
@@ -82,12 +82,6 @@ namespace Knowledge_Center_API.DataAccess
             INNER JOIN ""Tags"" t
                 ON lt.""TagId"" = t.""TagId""
             WHERE lt.""LogId"" = @LogId;
-        ";
-
-        public static readonly string UpdateChatURLByLogId = @"
-            UPDATE ""LogEntries""
-            SET ""ChatURL"" = @ChatURL
-            WHERE ""LogId"" = @LogId;
         ";
 
         public static readonly string UpdateLogEntryContent = @"
