@@ -32,7 +32,7 @@ namespace Knowledge_Center_API.Services.Core
 
             // Status is always server-controlled on create
             action.Status = "Open";
-            action.CreatedAt = DateTime.Now;
+            action.CreatedAt = AppClock.Now;
             action.CompletedAt = null;
 
             var parameters = new List<NpgsqlParameter>
@@ -148,7 +148,7 @@ namespace Knowledge_Center_API.Services.Core
             if (existing.Status == "Completed")
                 return true;
 
-            return SetActionStatus(id, "Completed", DateTime.Now);
+            return SetActionStatus(id, "Completed", AppClock.Now);
         }
 
         public bool ReopenAction(int id)

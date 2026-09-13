@@ -22,6 +22,14 @@ namespace Knowledge_Center_API
             });
 
             /* =======================================================
+             * APPLICATION TIME ZONE
+             * Timestamp columns are naive, so the app — not the host's TZ
+             * setting — decides what wall clock they're recorded in. Must run
+             * before anything reads AppClock (including DemoData's initializer).
+             * ======================================================= */
+            Services.Core.AppClock.Configure(builder.Configuration["AppTimeZone"]);
+
+            /* =======================================================
              * DATABASE SETUP
              * ======================================================= */
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

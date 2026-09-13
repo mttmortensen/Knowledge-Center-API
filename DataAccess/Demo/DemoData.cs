@@ -3,6 +3,7 @@ using Knowledge_Center_API.Models.Domains;
 using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Models.TagEntries;
+using Knowledge_Center_API.Services.Core;
 
 namespace Knowledge_Center_API.DataAccess.Demo
 {
@@ -16,7 +17,7 @@ namespace Knowledge_Center_API.DataAccess.Demo
 
         static DemoData()
         {
-            var now = DateTime.UtcNow;
+            var now = AppClock.Now;
 
             string[] domainNames =
             {

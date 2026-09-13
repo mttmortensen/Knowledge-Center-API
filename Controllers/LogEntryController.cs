@@ -94,7 +94,7 @@ namespace Knowledge_Center_API.Controllers
                 NodeId = log.NodeId,
                 Title = log.Title,
                 Content = log.Content,
-                EntryDate = DateTime.UtcNow
+                EntryDate = AppClock.Now
             });
 
             if (demoResult != null)
@@ -109,7 +109,7 @@ namespace Knowledge_Center_API.Controllers
             try
             {
                 // === Step 1: Call service — it handles FieldValidator logic ===
-                log.EntryDate = DateTime.Now;
+                log.EntryDate = AppClock.Now;
 
                 // Get the created ID back
                 int newLogId = _logEntryService.CreateLogEntryAndReturnId(log);

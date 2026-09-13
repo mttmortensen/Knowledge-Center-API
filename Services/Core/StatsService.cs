@@ -112,7 +112,7 @@ namespace Knowledge_Center_API.Services.Core
         {
             var parameters = new List<NpgsqlParameter>
             {
-                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = DateTime.Now.Date.AddDays(-HeatmapDays) }
+                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = AppClock.Today.AddDays(-HeatmapDays).ToDateTime(TimeOnly.MinValue) }
             };
 
             var rawDBResults = _database.ExecuteQuery(StatsQueries.GetCtpCountsByDay, parameters);
@@ -142,7 +142,7 @@ namespace Knowledge_Center_API.Services.Core
         {
             var parameters = new List<NpgsqlParameter>
             {
-                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = DateTime.Now.Date.AddDays(-HeatmapDays) }
+                new NpgsqlParameter("@Since", NpgsqlDbType.Timestamp) { Value = AppClock.Today.AddDays(-HeatmapDays).ToDateTime(TimeOnly.MinValue) }
             };
 
             var rawDBResults = _database.ExecuteQuery(StatsQueries.GetActionCompletionCountsByDay, parameters);

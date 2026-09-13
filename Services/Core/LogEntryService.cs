@@ -53,7 +53,7 @@ namespace Knowledge_Center_API.Services.Core
 
 
             // Set timestamp
-            log.EntryDate = DateTime.Now;
+            log.EntryDate = AppClock.Now;
 
             var parameters = new List<NpgsqlParameter>
             {

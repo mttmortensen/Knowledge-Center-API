@@ -114,7 +114,7 @@ namespace Knowledge_Center_API.Controllers
                 DomainName = domain.DomainName,
                 DomainDescription = domain.DomainDescription,
                 DomainStatus = domain.DomainStatus,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = AppClock.Now
             });
 
             if (demoResult != null)
