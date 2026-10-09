@@ -4,7 +4,7 @@ namespace Knowledge_Center_API.Models.LogEntries
      * PUT /api/logs/{id}
      *
      * Updates the editable body of an existing entry (title, content).
-     * Tags and ChatURL stay on their own dedicated routes.
+     * Tags stay on their own dedicated route.
      */
     public class LogEntryContentUpdateDto
     {

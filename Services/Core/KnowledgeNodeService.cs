@@ -37,7 +37,7 @@ namespace Knowledge_Center_API.Services.Core
 
 
             // Set timestamps
-            DateTime now = DateTime.Now;
+            DateTime now = AppClock.Now;
             node.CreatedAt = now;
             node.LastUpdated = now;
 
@@ -114,8 +114,7 @@ namespace Knowledge_Center_API.Services.Core
                 LogId = log.LogId,
                 Title = log.Title,
                 Content = log.Content,
-                EntryDate = log.EntryDate,
-                ChatURL = log.ChatURL
+                EntryDate = log.EntryDate
 
             })
             .ToList();
@@ -142,7 +141,7 @@ namespace Knowledge_Center_API.Services.Core
             if (dto.ConfidenceLevel.HasValue) existingKNDto.ConfidenceLevel = dto.ConfidenceLevel.Value;
             if (dto.DomainId.HasValue) existingKNDto.DomainId = dto.DomainId.Value;
 
-            existingKNDto.LastUpdated = DateTime.Now;
+            existingKNDto.LastUpdated = AppClock.Now;
 
 
             // Manually map to base model before passing to UpdateKnowledgeNode
@@ -171,7 +170,7 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateEnumValue(node.Status, "Status", new() { "Exploring", "Learning", "Mastered" });
 
             // UPDATE Query + Parameters to update an existingKNDto KnowledgeNode by it's ID
-            node.LastUpdated = DateTime.Now;
+            node.LastUpdated = AppClock.Now;
 
             // === Strictly Typed SQL Parameters ===
             var parameters = new List<NpgsqlParameter>
@@ -240,7 +239,7 @@ namespace Knowledge_Center_API.Services.Core
             var parameters = new List<NpgsqlParameter>
             {
                 new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = id },
-                new NpgsqlParameter("@ArchivedAt", NpgsqlDbType.Timestamp) { Value = DateTime.Now }
+                new NpgsqlParameter("@ArchivedAt", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
             };
 
             int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.ArchiveKnowledgeNode, parameters);

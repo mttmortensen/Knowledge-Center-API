@@ -33,7 +33,7 @@ namespace Knowledge_Center_API.Services.Core
             FieldValidator.ValidateEnumValue(domain.DomainStatus, "Domain Status", new() { "Active", "Inactive" });
 
             // Set timestamps first
-            DateTime now = DateTime.Now;
+            DateTime now = AppClock.Now;
             domain.CreatedAt = now;
             domain.LastUsed = now;
             domain.LastUpdated = now;
@@ -183,7 +183,7 @@ namespace Knowledge_Center_API.Services.Core
 
             // "LastUsed" is the column UpdateDomain actually persists — the DB has no
             // separate LastUpdated column, so this is what the API reports as LastUpdated.
-            existing.LastUsed = DateTime.Now;
+            existing.LastUsed = AppClock.Now;
 
             return UpdateDomain(existing);
         }
@@ -242,7 +242,7 @@ namespace Knowledge_Center_API.Services.Core
             if (existing.IsArchived)
                 return true;
 
-            DateTime archivedAt = DateTime.Now;
+            DateTime archivedAt = AppClock.Now;
 
             var parameters = new List<NpgsqlParameter>
             {

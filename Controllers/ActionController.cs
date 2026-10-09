@@ -157,7 +157,7 @@ namespace Knowledge_Center_API.Controllers
                 KnowledgeNodeId = dto.KnowledgeNodeId,
                 ActionText = dto.ActionText,
                 Status = "Open",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = AppClock.Now
             });
 
             if (demoResult != null)

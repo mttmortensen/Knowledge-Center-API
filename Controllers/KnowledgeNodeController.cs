@@ -74,8 +74,7 @@ namespace Knowledge_Center_API.Controllers
                         LogId = log.LogId,
                         Title = log.Title,
                         Content = log.Content,
-                        EntryDate = log.EntryDate,
-                        ChatURL = log.ChatURL
+                        EntryDate = log.EntryDate
                     })
                     .ToList();
 
@@ -118,7 +117,7 @@ namespace Knowledge_Center_API.Controllers
                 Description = node.Description,
                 ConfidenceLevel = node.ConfidenceLevel,
                 Status = node.Status,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = AppClock.Now
             });
 
             if (demoResult != null)

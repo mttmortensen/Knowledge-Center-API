@@ -35,7 +35,7 @@ namespace Knowledge_Center_API.Services.Core
             // Current streak only holds if the most recent day was today or
             // yesterday — anything older means the streak already broke, even though
             // there's still a run of consecutive days sitting further back in history.
-            var today = DateOnly.FromDateTime(DateTime.Now);
+            var today = AppClock.Today;
             int currentStreak = 0;
             if (daysDescending[0] == today || daysDescending[0] == today.AddDays(-1))
             {

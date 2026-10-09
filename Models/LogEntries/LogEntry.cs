@@ -10,6 +10,5 @@ namespace Knowledge_Center_API.Models.LogEntries
         public string? Title { get; set; }
         public string Content { get; set; }
         public List<Tags> Tags { get; set; } = new();
-        public string? ChatURL { get; set; }
     }
 }
