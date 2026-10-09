@@ -98,6 +98,8 @@ StyleCopReport.xml
 *.svclog
 *.scc
 *.csproj
+# ...except the test project, which only exists in this repo
+!Tests/**/*.csproj
 *.sln
 *.http
 appsettings.*

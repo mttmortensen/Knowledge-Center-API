@@ -42,6 +42,24 @@ Knowledge-Center-API/
 - `PUT /api/logs/{id}/tags` — Add or replace tags
 - `DELETE /api/kns/{nodeId}/logs` — Remove all logs tied to a Knowledge Node
 
+### Learn (progressive-learning notebooks)
+
+A session is an ordered timeline of markdown entries. Entry type and links are
+parsed from the source on every read: `?? ...` is a question, `@answers(<entryId>)`
+is a follow-up (which marks that question answered), `@log(<logId>)` references a log.
+
+- `GET /api/learn/sessions` — List sessions (with entry / open-question counts)
+- `POST /api/learn/sessions` — Create a session (`Title`, optional `Topic`, `NodeId`)
+- `GET /api/learn/sessions/{id}` — Get a session with its entries in timeline order
+- `PUT /api/learn/sessions/{id}` — Update title / topic / Knowledge Node
+- `DELETE /api/learn/sessions/{id}` — Delete a session and its entries
+- `POST /api/learn/sessions/{id}/entries` — Add an entry (`Source`, optional `BeforeEntryId` to insert above an entry)
+- `GET|PUT|DELETE /api/learn/entries/{id}` — Read, edit, or delete one entry
+- `GET /api/learn/questions/open?sessionId=` — Questions with no follow-up yet
+- `GET /api/learn/sessions/{id}/export` — The session as one `.md` file
+
+Schema: `SQL/create_learn_tables.sql` (additive; back up `kc_db` before applying).
+
 > All endpoints require JWT unless in demo mode.
 
 ## 🧱 Architecture Style
@@ -62,6 +80,17 @@ Follows a **layered architecture**:
 - Full-text `/search` endpoint across Logs, Nodes, Tags, Domains
 - `/stats` endpoint to mimic GitHub-style contribution heatmaps
 
+
+## 🧪 Tests
+
+```bash
+ dotnet test Tests/Knowledge-Center-API.Tests
+```
+
+Parser, export and demo-mode tests always run. The database-backed endpoint tests
+need `KC_TEST_DB` set to an Npgsql connection string for a **throwaway** database
+whose name contains `test` (e.g. `kc_learn_test`); they drop and rebuild its schema,
+and refuse to run against any other database name.
 
 ## 🧑‍💻 Dev Setup
 

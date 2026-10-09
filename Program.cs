@@ -46,6 +46,7 @@ namespace Knowledge_Center_API
             builder.Services.AddScoped<Services.Core.UserService>();
             builder.Services.AddScoped<Services.Core.ActionService>();
             builder.Services.AddScoped<Services.Core.StatsService>();
+            builder.Services.AddScoped<Services.Core.LearnService>();
             builder.Services.AddSingleton(new Services.Core.ImageService(uploadDirectory));
 
             /* =======================================================

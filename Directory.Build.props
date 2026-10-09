@@ -1,0 +1,11 @@
+<Project>
+	<!--
+	  Knowledge-Center-API.csproj sits at the repo root, so its default **/*.cs glob
+	  would also compile the test project under Tests/. The .csproj is gitignored
+	  (each machine keeps its own), so the exclusion lives here, where git carries
+	  it to every checkout, including the MRTN-LAPPS build host.
+	-->
+	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'Knowledge-Center-API'">
+		<DefaultItemExcludes>$(DefaultItemExcludes);Tests/**</DefaultItemExcludes>
+	</PropertyGroup>
+</Project>

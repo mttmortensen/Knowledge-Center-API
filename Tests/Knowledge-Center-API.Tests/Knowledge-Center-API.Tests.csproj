@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>Knowledge_Center_API.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
+
+	<PropertyGroup>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.10" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Knowledge-Center-API.csproj" />
+	</ItemGroup>
+
+	<!-- The schema scripts the DB-backed tests build the test database from. -->
+	<ItemGroup>
+		<None Include="..\..\SQL\postgres_schema.sql" Link="SQL\postgres_schema.sql" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SQL\add_archiving.sql" Link="SQL\add_archiving.sql" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SQL\create_actions_table.sql" Link="SQL\create_actions_table.sql" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SQL\create_learn_tables.sql" Link="SQL\create_learn_tables.sql" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+</Project>

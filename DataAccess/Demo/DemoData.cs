@@ -1,8 +1,10 @@
 using Knowledge_Center_API.Models.Actions;
 using Knowledge_Center_API.Models.Domains;
 using Knowledge_Center_API.Models.KnowledgeNodes;
+using Knowledge_Center_API.Models.Learn;
 using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Models.TagEntries;
+using Knowledge_Center_API.Services.Core;
 
 namespace Knowledge_Center_API.DataAccess.Demo
 {
@@ -13,6 +15,8 @@ namespace Knowledge_Center_API.DataAccess.Demo
         public static readonly List<LogEntry> LogEntries;
         public static readonly List<Tags> Tags;
         public static readonly List<ActionItem> Actions;
+        public static readonly List<LearnSession> LearnSessions;
+        public static readonly List<LearnEntry> LearnEntries;
 
         static DemoData()
         {
@@ -163,6 +167,50 @@ namespace Knowledge_Center_API.DataAccess.Demo
                     actionId++;
                 }
             }
+
+            // One Learn session filed under the first Databases node, showing each
+            // entry type: note, question, code, follow-up, open question and a log reference.
+            var learnNode = KnowledgeNodes.First(n => n.DomainId == 5);
+            var learnLog = LogEntries.First(l => l.NodeId == learnNode.Id);
+            var learnStart = now.AddDays(-3);
+
+            LearnSessions = new List<LearnSession>
+            {
+                new LearnSession
+                {
+                    SessionId = 1,
+                    Title = "Postgres indexing basics",
+                    Topic = "Databases",
+                    NodeId = learnNode.Id,
+                    NodeTitle = learnNode.Title,
+                    CreatedAt = learnStart,
+                    UpdatedAt = learnStart.AddHours(2)
+                }
+            };
+
+            string[] learnSources =
+            {
+                "## B-tree indexes\nPostgres builds a **B-tree** index by default with `CREATE INDEX`. B-trees handle equality and range comparisons (`=`, `<`, `>`, `BETWEEN`).",
+                "?? Does a composite index on `(a, b)` help a query that only filters on `b`?",
+                "```sql\nCREATE INDEX idx_orders_customer_created\n    ON orders (customer_id, created_at);\n```",
+                "@answers(2) Usually not much. A multicolumn B-tree is most efficient when the query constrains the *leading* column; filtering only on `b` means scanning the whole index.",
+                "?? When is a partial index (`CREATE INDEX ... WHERE ...`) worth it over a full one?",
+                $"@log({learnLog.LogId})"
+            };
+
+            LearnEntries = learnSources.Select((source, i) => new LearnEntry
+            {
+                EntryId = i + 1,
+                SessionId = 1,
+                Position = (i + 1) * LearnService.PositionGap,
+                Source = source,
+                CreatedAt = learnStart.AddMinutes(i * 20),
+                UpdatedAt = learnStart.AddMinutes(i * 20)
+            }).ToList();
+
+            LearnSourceParser.Annotate(LearnEntries);
+            LearnSessions[0].EntryCount = LearnEntries.Count;
+            LearnSessions[0].OpenQuestionCount = LearnEntries.Count(e => e.QuestionStatus == "open");
         }
     }
 }
