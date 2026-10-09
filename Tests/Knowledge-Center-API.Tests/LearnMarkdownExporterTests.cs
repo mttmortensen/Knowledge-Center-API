@@ -1,5 +1,4 @@
 using Knowledge_Center_API.Models.Learn;
-using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Services.Core;
 
 namespace Knowledge_Center_API.Tests
@@ -27,7 +26,7 @@ namespace Knowledge_Center_API.Tests
         {
             var session = Session((2, 300, "third"), (1, 100, "?? first"), (3, 200, "@answers(1) second"));
 
-            string md = LearnMarkdownExporter.Build(session, _ => null);
+            string md = LearnMarkdownExporter.Build(session);
 
             Assert.StartsWith("# Indexes", md);
             Assert.Contains("Topic: Databases", md);
@@ -38,20 +37,6 @@ namespace Knowledge_Center_API.Tests
             Assert.Contains("<!-- entry 1 · question", md);
             Assert.Contains("<!-- entry 3 · followup", md);
             Assert.DoesNotContain("\r", md);
-        }
-
-        [Fact]
-        public void Build_ExpandsLogReferences()
-        {
-            var session = Session((1, 100, "@log(5)"), (2, 200, "@log(6)"));
-            var log = new LogEntry { LogId = 5, Title = "Read the docs", Content = "Learned about GIN.", EntryDate = new DateTime(2026, 9, 30) };
-
-            string md = LearnMarkdownExporter.Build(session, id => id == 5 ? log : null);
-
-            Assert.Contains("**Read the docs**", md);
-            Assert.Contains("Learned about GIN.", md);
-            Assert.Contains("_Log #6 was deleted._", md);
-            Assert.DoesNotContain("\n@log(5)", md);
         }
     }
 }

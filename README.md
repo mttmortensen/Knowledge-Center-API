@@ -46,7 +46,8 @@ Knowledge-Center-API/
 
 A session is an ordered timeline of markdown entries. Entry type and links are
 parsed from the source on every read: `?? ...` is a question, `@answers(<entryId>)`
-is a follow-up (which marks that question answered), `@log(<logId>)` references a log.
+is a follow-up (which marks that question answered). Learn is separate from Logs: it
+never reads or writes them, and a session's optional `NodeId` is just a label.
 
 - `GET /api/learn/sessions` — List sessions (with entry / open-question counts)
 - `POST /api/learn/sessions` — Create a session (`Title`, optional `Topic`, `NodeId`)

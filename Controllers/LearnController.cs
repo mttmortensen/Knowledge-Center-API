@@ -10,8 +10,8 @@ namespace Knowledge_Center_API.Controllers
 {
     /// <summary>
     /// Learn: progressive-learning notebooks. A session is an ordered timeline of
-    /// markdown entries (notes, images, code, ?? questions, @answers(id) follow-ups
-    /// and @log(id) log references).
+    /// markdown entries (notes, images, code, ?? questions and @answers(id)
+    /// follow-ups). Learn is separate from Logs and never reads or writes them.
     /// Requires JWT authentication.
     /// </summary>
     [RequireToken]
@@ -69,7 +69,7 @@ namespace Knowledge_Center_API.Controllers
         /// <summary>
         /// Creates a new, empty Learn session.
         /// </summary>
-        /// <param name="dto">Title (required), optional Topic and Knowledge Node.</param>
+        /// <param name="dto">Title (required), optional Topic and Knowledge Node label.</param>
         /// <response code="201">Session created.</response>
         /// <response code="400">Invalid input.</response>
         /// <response code="429">Rate limit exceeded.</response>
@@ -150,8 +150,7 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
-        /// Deletes a Learn session and all of its entries. Logs referenced with
-        /// @log(id) are not touched.
+        /// Deletes a Learn session and all of its entries.
         /// </summary>
         /// <param name="id">The session ID.</param>
         /// <response code="204">Session deleted.</response>
@@ -182,8 +181,7 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
-        /// Exports a session as a single markdown file in timeline order. @log(id)
-        /// entries are expanded to the log's content.
+        /// Exports a session as a single markdown file in timeline order.
         /// </summary>
         /// <param name="id">The session ID.</param>
         /// <response code="200">text/markdown attachment.</response>
@@ -200,7 +198,7 @@ namespace Knowledge_Center_API.Controllers
                 var demo = BuildDemoSession(id);
                 markdown = demo == null
                     ? null
-                    : LearnMarkdownExporter.Build(demo, logId => DemoData.LogEntries.FirstOrDefault(l => l.LogId == logId));
+                    : LearnMarkdownExporter.Build(demo);
                 title = demo?.Title;
             }
             else

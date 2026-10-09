@@ -8,14 +8,14 @@ using Knowledge_Center_API.Services.Security;
 namespace Knowledge_Center_API.Tests
 {
     /*
-     * Rebuilds the KC_TEST_DB schema once for the class and seeds one domain, two
-     * Knowledge Nodes and one log for @log / NodeId tests.
+     * Rebuilds the KC_TEST_DB schema once for the class and seeds one domain, one
+     * Knowledge Node (for the NodeId label) and one log (to prove Learn leaves
+     * Logs alone).
      */
     public class LearnDbFixture : IDisposable
     {
         public TestApiFactory Factory { get; } = new();
         public int NodeId { get; }
-        public int LogId { get; }
 
         public LearnDbFixture()
         {
@@ -25,7 +25,7 @@ namespace Knowledge_Center_API.Tests
             int domainId = TestDatabase.Scalar(@"INSERT INTO ""Domains"" (""DomainName"", ""DomainStatus"") VALUES ('Test domain', 'Active') RETURNING ""DomainId"";");
             // Every column filled: the existing KnowledgeNode read path assumes non-null values.
             NodeId = TestDatabase.Scalar($@"INSERT INTO ""KnowledgeNodes"" (""Title"", ""Description"", ""ConfidenceLevel"", ""Status"", ""CreatedAt"", ""LastUpdated"", ""DomainId"") VALUES ('Test node', 'Seeded for tests', 1, 'Learning', now(), now(), {domainId}) RETURNING ""Id"";");
-            LogId = TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({NodeId}, now(), 'Seeded log', 'Seeded log body') RETURNING ""LogId"";");
+            TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({NodeId}, now(), 'Seeded log', 'Seeded log body') RETURNING ""LogId"";");
         }
 
         // One session token for the whole class: AuthSession keeps one token per
@@ -248,19 +248,21 @@ namespace Knowledge_Center_API.Tests
             Assert.Equal(HttpStatusCode.OK, edit.StatusCode);
         }
 
-        /* ===================== @log & EXPORT ===================== */
+        /* ===================== LOGS & EXPORT ===================== */
 
         [DbFact]
-        public async Task Log_ReferenceMustExist()
+        public async Task Learn_NeverTouchesLogs()
         {
             var (client, session) = await NewSession();
+            string countLogs = @"SELECT COUNT(*) FROM ""LogEntries""";
+            int logsBefore = TestDatabase.Scalar(countLogs);
 
-            var bad = await client.PostAsJsonAsync($"/kc/api/learn/sessions/{session.SessionId}/entries", new { Source = "@log(999999)" });
-            Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode);
+            // "@log..." is no longer special: it saves as ordinary, unvalidated text.
+            var reference = await AddEntry(client, session.SessionId, "@log(999999)");
+            Assert.Equal("note", reference.EntryType);
+            await AddEntry(client, session.SessionId, "@log a quick note");
 
-            var good = await AddEntry(client, session.SessionId, $"@log({_fx.LogId})");
-            Assert.Equal("log", good.EntryType);
-            Assert.Equal(_fx.LogId, good.LogId);
+            Assert.Equal(logsBefore, TestDatabase.Scalar(countLogs));
         }
 
         [DbFact]
@@ -268,7 +270,7 @@ namespace Knowledge_Center_API.Tests
         {
             var (client, session) = await NewSession("Export me");
             var q = await AddEntry(client, session.SessionId, "?? question");
-            var last = await AddEntry(client, session.SessionId, $"@log({_fx.LogId})");
+            var last = await AddEntry(client, session.SessionId, "closing note");
             await AddEntry(client, session.SessionId, $"@answers({q.EntryId}) answer", beforeEntryId: last.EntryId);
 
             var res = await client.GetAsync($"/kc/api/learn/sessions/{session.SessionId}/export");
@@ -280,8 +282,8 @@ namespace Knowledge_Center_API.Tests
             Assert.StartsWith("# Export me", md);
             int question = md.IndexOf("?? question");
             int answer = md.IndexOf($"@answers({q.EntryId}) answer");
-            int log = md.IndexOf("Seeded log body");
-            Assert.True(question >= 0 && question < answer && answer < log);
+            int closing = md.IndexOf("closing note");
+            Assert.True(question >= 0 && question < answer && answer < closing);
         }
     }
 
@@ -309,7 +311,6 @@ namespace Knowledge_Center_API.Tests
             Assert.Contains(details!.Entries, e => e.EntryType == "followup");
             Assert.Contains(details.Entries, e => e.QuestionStatus == "answered");
             Assert.Contains(details.Entries, e => e.QuestionStatus == "open");
-            Assert.Contains(details.Entries, e => e.EntryType == "log");
         }
 
         [Fact]

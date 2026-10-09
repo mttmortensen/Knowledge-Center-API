@@ -17,13 +17,11 @@ namespace Knowledge_Center_API.Services.Core
 
         private readonly Database _database;
         private readonly KnowledgeNodeService _knService;
-        private readonly LogEntryService _logService;
 
-        public LearnService(Database database, KnowledgeNodeService knService, LogEntryService logService)
+        public LearnService(Database database, KnowledgeNodeService knService)
         {
             _database = database;
             _knService = knService;
-            _logService = logService;
         }
 
         /* ===================== SESSIONS ===================== */
@@ -246,7 +244,7 @@ namespace Knowledge_Center_API.Services.Core
             var session = GetSessionWithEntries(sessionId);
             if (session == null) return null;
 
-            return LearnMarkdownExporter.Build(session, logId => _logService.GetLogEntryByLogId(logId));
+            return LearnMarkdownExporter.Build(session);
         }
 
         // === UPDATE ===
@@ -322,10 +320,9 @@ namespace Knowledge_Center_API.Services.Core
         }
 
         /*
-         * @answers(id) must point at another entry in the same session, and @log(id)
-         * at a log that exists. A reference that hasn't changed since the entry was
-         * last saved is not rechecked, so a follow-up whose question was deleted
-         * (or an @log whose log was deleted) can still be edited.
+         * @answers(id) must point at another entry in the same session. A reference
+         * that hasn't changed since the entry was last saved is not rechecked, so a
+         * follow-up whose question was deleted can still be edited.
          */
         private void ValidateReferences(int sessionId, int? entryId, string source, string? previousSource)
         {
@@ -345,13 +342,6 @@ namespace Knowledge_Center_API.Services.Core
 
                 if (target.SessionId != sessionId)
                     throw new ArgumentException($"@answers({targetId}): entry {targetId} belongs to a different session.");
-            }
-
-            if (parsed.LogId.HasValue && parsed.LogId != previous?.LogId)
-            {
-                int logId = parsed.LogId.Value;
-                if (logId <= 0 || _logService.GetLogEntryByLogId(logId) == null)
-                    throw new ArgumentException($"@log({logId}): log {logId} does not exist.");
             }
         }
 

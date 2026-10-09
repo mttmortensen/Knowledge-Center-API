@@ -1,6 +1,5 @@
 using System.Text;
 using Knowledge_Center_API.Models.Learn;
-using Knowledge_Center_API.Models.LogEntries;
 
 namespace Knowledge_Center_API.Services.Core
 {
@@ -9,12 +8,11 @@ namespace Knowledge_Center_API.Services.Core
      *
      * Each entry is preceded by an HTML comment anchor ("<!-- entry 12 · ... -->")
      * so @answers(12) references in the exported text still point somewhere a
-     * reader can find. @log(id) entries are expanded to the log's own content,
-     * since a bare reference is meaningless outside the app.
+     * reader can find.
      */
     public static class LearnMarkdownExporter
     {
-        public static string Build(LearnSessionDetailsDto session, Func<int, LogEntry?> findLog)
+        public static string Build(LearnSessionDetailsDto session)
         {
             // Lines always end in '\n' whatever the host OS; entry sources already
             // do, and StringBuilder's line helper would mix in "\r\n" on Windows.
@@ -37,25 +35,7 @@ namespace Knowledge_Center_API.Services.Core
 
                 Line($"<!-- entry {entry.EntryId} · {parsed.EntryType} · {entry.CreatedAt:yyyy-MM-dd HH:mm} -->");
 
-                if (parsed.LogId.HasValue)
-                {
-                    var log = findLog(parsed.LogId.Value);
-                    if (log == null)
-                    {
-                        Line($"_Log #{parsed.LogId} was deleted._");
-                    }
-                    else
-                    {
-                        string heading = string.IsNullOrWhiteSpace(log.Title) ? $"Log #{log.LogId}" : log.Title;
-                        Line($"**{heading}** _(log #{log.LogId}, {log.EntryDate:yyyy-MM-dd})_");
-                        Line();
-                        Line(log.Content.TrimEnd());
-                    }
-                }
-                else
-                {
-                    Line(entry.Source.TrimEnd());
-                }
+                Line(entry.Source.TrimEnd());
 
                 Line();
             }

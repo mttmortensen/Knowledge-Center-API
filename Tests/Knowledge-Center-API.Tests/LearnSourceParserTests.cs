@@ -17,9 +17,7 @@ namespace Knowledge_Center_API.Tests
         [InlineData("![a diagram](https://x/uploads/a.png)\nand some text", "note")]
         [InlineData("@answers(12) because...", "followup")]
         [InlineData("@answers(abc) not a number", "note")]
-        [InlineData("@log(34)", "log")]
-        [InlineData("  @log(34)  ", "log")]
-        [InlineData("@log(34) with trailing text", "note")]
+        [InlineData("@log(34)", "note")]
         public void Parse_DetectsEntryType(string source, string expectedType)
         {
             Assert.Equal(expectedType, LearnSourceParser.Parse(source).EntryType);
@@ -30,15 +28,6 @@ namespace Knowledge_Center_API.Tests
         {
             var parsed = LearnSourceParser.Parse("@answers(42) The answer is 42.");
             Assert.Equal(42, parsed.AnswersEntryId);
-            Assert.Null(parsed.LogId);
-        }
-
-        [Fact]
-        public void Parse_ExtractsLogId()
-        {
-            var parsed = LearnSourceParser.Parse("@log(7)");
-            Assert.Equal(7, parsed.LogId);
-            Assert.Null(parsed.AnswersEntryId);
         }
 
         [Fact]

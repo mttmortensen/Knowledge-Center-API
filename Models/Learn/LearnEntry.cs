@@ -4,7 +4,7 @@ namespace Knowledge_Center_API.Models.Learn
      * One entry in a Learn session's timeline.
      *
      * Source (raw markdown) is the only stored content. EntryType, QuestionStatus,
-     * AnswersEntryId and LogId are derived from it on every read by
+     * and AnswersEntryId are derived from it on every read by
      * LearnSourceParser, so they can never drift from what was written.
      */
     public class LearnEntry
@@ -18,7 +18,7 @@ namespace Knowledge_Center_API.Models.Learn
 
         // === Derived (read-only) ===
 
-        /// <summary>note, image, code, question, followup or log.</summary>
+        /// <summary>note, image, code, question or followup.</summary>
         public string EntryType { get; set; }
 
         /// <summary>open or answered for questions; null otherwise.</summary>
@@ -26,8 +26,5 @@ namespace Knowledge_Center_API.Models.Learn
 
         /// <summary>Target of an @answers(id) follow-up.</summary>
         public int? AnswersEntryId { get; set; }
-
-        /// <summary>Log referenced by an @log(id) entry.</summary>
-        public int? LogId { get; set; }
     }
 }

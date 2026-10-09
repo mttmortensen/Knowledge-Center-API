@@ -168,9 +168,8 @@ namespace Knowledge_Center_API.DataAccess.Demo
             }
 
             // One Learn session filed under the first Databases node, showing each
-            // entry type: note, question, code, follow-up, open question and a log reference.
+            // entry type: note, question, code, follow-up and an open question.
             var learnNode = KnowledgeNodes.First(n => n.DomainId == 5);
-            var learnLog = LogEntries.First(l => l.NodeId == learnNode.Id);
             var learnStart = now.AddDays(-3);
 
             LearnSessions = new List<LearnSession>
@@ -194,7 +193,7 @@ namespace Knowledge_Center_API.DataAccess.Demo
                 "```sql\nCREATE INDEX idx_orders_customer_created\n    ON orders (customer_id, created_at);\n```",
                 "@answers(2) Usually not much. A multicolumn B-tree is most efficient when the query constrains the *leading* column; filtering only on `b` means scanning the whole index.",
                 "?? When is a partial index (`CREATE INDEX ... WHERE ...`) worth it over a full one?",
-                $"@log({learnLog.LogId})"
+                "Next: run `EXPLAIN ANALYZE` on a query that filters only on `created_at` and compare the plan with one that filters on `customer_id`."
             };
 
             LearnEntries = learnSources.Select((source, i) => new LearnEntry

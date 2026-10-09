@@ -11,11 +11,12 @@ namespace Knowledge_Center_API.Services.Core
      * questions and export. Keep the two rule sets in step.
      *
      *   @answers(12) ...   follow-up to entry 12
-     *   @log(34)           reference to log 34 (the reference is the whole entry)
      *   ?? ...             question
      *   ```...             code block
      *   ![caption](url)    image (when that is the whole entry)
      *   anything else      note
+     *
+     * Learn is deliberately separate from Logs: nothing here reads or writes them.
      */
     public static class LearnSourceParser
     {
@@ -24,10 +25,8 @@ namespace Knowledge_Center_API.Services.Core
         public const string Code = "code";
         public const string Question = "question";
         public const string FollowUp = "followup";
-        public const string Log = "log";
 
         private static readonly Regex AnswersPattern = new(@"^\s*@answers\((\d+)\)", RegexOptions.Compiled);
-        private static readonly Regex LogPattern = new(@"^\s*@log\((\d+)\)\s*$", RegexOptions.Compiled);
         private static readonly Regex ImagePattern = new(@"^\s*!\[[^\]]*\]\([^)\s]+\)\s*$", RegexOptions.Compiled);
 
         public static ParsedLearnSource Parse(string? source)
@@ -36,24 +35,20 @@ namespace Knowledge_Center_API.Services.Core
 
             Match answers = AnswersPattern.Match(text);
             if (answers.Success && int.TryParse(answers.Groups[1].Value, out int targetId))
-                return new ParsedLearnSource(FollowUp, targetId, null);
-
-            Match log = LogPattern.Match(text);
-            if (log.Success && int.TryParse(log.Groups[1].Value, out int logId))
-                return new ParsedLearnSource(Log, null, logId);
+                return new ParsedLearnSource(FollowUp, targetId);
 
             string trimmed = text.TrimStart();
 
             if (trimmed.StartsWith("??"))
-                return new ParsedLearnSource(Question, null, null);
+                return new ParsedLearnSource(Question, null);
 
             if (trimmed.StartsWith("```"))
-                return new ParsedLearnSource(Code, null, null);
+                return new ParsedLearnSource(Code, null);
 
             if (ImagePattern.IsMatch(text))
-                return new ParsedLearnSource(Image, null, null);
+                return new ParsedLearnSource(Image, null);
 
-            return new ParsedLearnSource(Note, null, null);
+            return new ParsedLearnSource(Note, null);
         }
 
         /*
@@ -74,7 +69,6 @@ namespace Knowledge_Center_API.Services.Core
                 var p = parsed[entry.EntryId];
                 entry.EntryType = p.EntryType;
                 entry.AnswersEntryId = p.AnswersEntryId;
-                entry.LogId = p.LogId;
                 entry.QuestionStatus = p.EntryType == Question
                     ? (answeredIds.Contains(entry.EntryId) ? "answered" : "open")
                     : null;
@@ -82,5 +76,5 @@ namespace Knowledge_Center_API.Services.Core
         }
     }
 
-    public record ParsedLearnSource(string EntryType, int? AnswersEntryId, int? LogId);
+    public record ParsedLearnSource(string EntryType, int? AnswersEntryId);
 }
