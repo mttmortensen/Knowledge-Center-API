@@ -40,7 +40,7 @@ namespace Knowledge_Center_API.Services.Core
                 new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = dto.Title.Trim() },
                 new NpgsqlParameter("@Topic", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(dto.Topic) ? DBNull.Value : dto.Topic.Trim() },
                 new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = dto.NodeId.HasValue ? dto.NodeId.Value : DBNull.Value },
-                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = DateTime.Now }
+                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
             };
 
             return _database.ExecuteScalar<int>(LearnQueries.InsertSession, parameters);
@@ -117,7 +117,7 @@ namespace Knowledge_Center_API.Services.Core
                 new NpgsqlParameter("@Title", NpgsqlDbType.Varchar, 200) { Value = newTitle },
                 new NpgsqlParameter("@Topic", NpgsqlDbType.Varchar, 200) { Value = string.IsNullOrWhiteSpace(newTopic) ? DBNull.Value : newTopic },
                 new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = newNodeId.HasValue ? newNodeId.Value : DBNull.Value },
-                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = DateTime.Now }
+                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
             };
 
             return _database.ExecuteNonQuery(LearnQueries.UpdateSession, parameters) > 0;
@@ -165,7 +165,7 @@ namespace Knowledge_Center_API.Services.Core
                         new NpgsqlParameter("@SessionId", NpgsqlDbType.Integer) { Value = sessionId },
                         new NpgsqlParameter("@Position", NpgsqlDbType.Bigint) { Value = position },
                         new NpgsqlParameter("@Source", NpgsqlDbType.Text) { Value = dto.Source },
-                        new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = DateTime.Now }
+                        new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
                     };
 
                     int newId = _database.ExecuteScalar<int>(LearnQueries.InsertEntry, parameters);
@@ -262,7 +262,7 @@ namespace Knowledge_Center_API.Services.Core
             {
                 new NpgsqlParameter("@EntryId", NpgsqlDbType.Integer) { Value = entryId },
                 new NpgsqlParameter("@Source", NpgsqlDbType.Text) { Value = dto.Source },
-                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = DateTime.Now }
+                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
             };
 
             bool updated = _database.ExecuteNonQuery(LearnQueries.UpdateEntrySource, parameters) > 0;
@@ -367,7 +367,7 @@ namespace Knowledge_Center_API.Services.Core
         private void TouchSession(int sessionId)
         {
             var parameters = SessionIdParam(sessionId);
-            parameters.Add(new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = DateTime.Now });
+            parameters.Add(new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now });
             _database.ExecuteNonQuery(LearnQueries.TouchSession, parameters);
         }
 

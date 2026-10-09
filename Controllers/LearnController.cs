@@ -83,8 +83,8 @@ namespace Knowledge_Center_API.Controllers
                 Title = dto.Title,
                 Topic = dto.Topic,
                 NodeId = dto.NodeId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = AppClock.Now,
+                UpdatedAt = AppClock.Now
             });
 
             if (demoResult != null)
@@ -237,8 +237,8 @@ namespace Knowledge_Center_API.Controllers
                     EntryId = 9999,
                     SessionId = sessionId,
                     Source = dto.Source,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = AppClock.Now,
+                    UpdatedAt = AppClock.Now
                 };
                 LearnSourceParser.Annotate(new List<LearnEntry> { fake });
                 return fake;
