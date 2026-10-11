@@ -48,7 +48,15 @@ namespace Knowledge_Center_API.DataAccess
             WHERE ""Id"" = @Id;
         ";
 
+        // Removes the node together with its actions and log entries — see
+        // DomainQueries.DeleteDomain for why it's a single statement.
         public static readonly string DeleteKnowledgeNode = @"
+            WITH ""DeletedActions"" AS (
+                DELETE FROM ""Actions"" WHERE ""KnowledgeNodeId"" = @Id
+            ),
+            ""DeletedLogs"" AS (
+                DELETE FROM ""LogEntries"" WHERE ""NodeId"" = @Id
+            )
             DELETE FROM ""KnowledgeNodes""
             WHERE ""Id"" = @Id;
         ";
