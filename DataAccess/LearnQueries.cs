@@ -53,14 +53,14 @@ namespace Knowledge_Center_API.DataAccess
         /* ===================== ENTRIES ===================== */
 
         public static readonly string GetEntriesBySessionId = @"
-            SELECT ""EntryId"", ""SessionId"", ""Position"", ""Source"", ""CreatedAt"", ""UpdatedAt""
+            SELECT ""EntryId"", ""SessionId"", ""Position"", ""Source"", ""CreatedAt"", ""UpdatedAt"", ""LogId""
             FROM ""LearnEntries""
             WHERE ""SessionId"" = @SessionId
             ORDER BY ""Position"";
         ";
 
         public static readonly string GetEntryById = @"
-            SELECT ""EntryId"", ""SessionId"", ""Position"", ""Source"", ""CreatedAt"", ""UpdatedAt""
+            SELECT ""EntryId"", ""SessionId"", ""Position"", ""Source"", ""CreatedAt"", ""UpdatedAt"", ""LogId""
             FROM ""LearnEntries""
             WHERE ""EntryId"" = @EntryId;
         ";
@@ -68,7 +68,7 @@ namespace Knowledge_Center_API.DataAccess
         // Cheap pre-filter for open-question lookups: only rows that could be a
         // question or a follow-up. The parser makes the final call.
         public static readonly string GetQuestionAndFollowUpEntries = @"
-            SELECT e.""EntryId"", e.""SessionId"", e.""Position"", e.""Source"", e.""CreatedAt"", e.""UpdatedAt"",
+            SELECT e.""EntryId"", e.""SessionId"", e.""Position"", e.""Source"", e.""CreatedAt"", e.""UpdatedAt"", e.""LogId"",
                    s.""Title"" AS ""SessionTitle""
             FROM ""LearnEntries"" e
             INNER JOIN ""LearnSessions"" s ON s.""SessionId"" = e.""SessionId""
@@ -113,6 +113,13 @@ namespace Knowledge_Center_API.DataAccess
         public static readonly string UpdateEntrySource = @"
             UPDATE ""LearnEntries""
             SET ""Source"" = @Source, ""UpdatedAt"" = @Now
+            WHERE ""EntryId"" = @EntryId;
+        ";
+
+        // Not a content edit, so UpdatedAt is left alone.
+        public static readonly string UpdateEntryLog = @"
+            UPDATE ""LearnEntries""
+            SET ""LogId"" = @LogId
             WHERE ""EntryId"" = @EntryId;
         ";
 

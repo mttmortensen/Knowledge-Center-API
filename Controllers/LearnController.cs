@@ -11,7 +11,8 @@ namespace Knowledge_Center_API.Controllers
     /// <summary>
     /// Learn: progressive-learning notebooks. A session is an ordered timeline of
     /// markdown entries (notes, images, code, ?? questions and @answers(id)
-    /// follow-ups). Learn is separate from Logs and never reads or writes them.
+    /// follow-ups). Learn never creates or edits Logs; an entry can only record
+    /// the id of a log that was made from it.
     /// Requires JWT authentication.
     /// </summary>
     [RequireToken]
@@ -318,6 +319,45 @@ namespace Knowledge_Center_API.Controllers
 
                 if (!_learnService.UpdateEntrySource(id, dto))
                     return StatusCode(500, new { message = "Failed to update entry." });
+
+                return Ok(_learnService.GetEntryById(id));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        /// <summary>
+        /// Records the log that was made from an entry, so the client can show it as
+        /// logged. LogId null or 0 clears the link. Learn never creates the log itself.
+        /// </summary>
+        /// <param name="id">The entry ID.</param>
+        /// <param name="dto">The log's ID.</param>
+        /// <response code="200">Link saved; returns the entry.</response>
+        /// <response code="400">Invalid input, e.g. a log that doesn't exist.</response>
+        /// <response code="404">Entry not found.</response>
+        [HttpPut("entries/{id}/log")]
+        public IActionResult SetEntryLog(int id, [FromBody] LearnEntryLogDto dto)
+        {
+            if (User.HasClaim("demo", "true"))
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+
+            try
+            {
+                if (_learnService.GetEntryById(id) == null)
+                    return NotFound(new { message = $"Entry with ID {id} was not found." });
+
+                int? logId = dto.LogId is null or 0 ? null : dto.LogId;
+                if (!_learnService.SetEntryLog(id, logId))
+                    return StatusCode(500, new { message = "Failed to link the log." });
 
                 return Ok(_learnService.GetEntryById(id));
             }

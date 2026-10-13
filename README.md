@@ -46,8 +46,9 @@ Knowledge-Center-API/
 
 A session is an ordered timeline of markdown entries. Entry type and links are
 parsed from the source on every read: `?? ...` is a question, `@answers(<entryId>)`
-is a follow-up (which marks that question answered). Learn is separate from Logs: it
-never reads or writes them, and a session's optional `NodeId` is just a label.
+is a follow-up (which marks that question answered). Learn never creates or edits
+Logs: a session's optional `NodeId` is just a label, and an entry's `LogId` only records
+the log the web app made from it (cleared if that log is deleted).
 
 - `GET /api/learn/sessions` — List sessions (with entry / open-question counts)
 - `POST /api/learn/sessions` — Create a session (`Title`, optional `Topic`, `NodeId`)
@@ -56,10 +57,11 @@ never reads or writes them, and a session's optional `NodeId` is just a label.
 - `DELETE /api/learn/sessions/{id}` — Delete a session and its entries
 - `POST /api/learn/sessions/{id}/entries` — Add an entry (`Source`, optional `BeforeEntryId` to insert above an entry)
 - `GET|PUT|DELETE /api/learn/entries/{id}` — Read, edit, or delete one entry
+- `PUT /api/learn/entries/{id}/log` — Record the log made from an entry (`LogId`; null or 0 clears it)
 - `GET /api/learn/questions/open?sessionId=` — Questions with no follow-up yet
 - `GET /api/learn/sessions/{id}/export` — The session as one `.md` file
 
-Schema: `SQL/create_learn_tables.sql` (additive; back up `kc_db` before applying).
+Schema: `SQL/create_learn_tables.sql`, then `SQL/add_learn_entry_log_link.sql` (both additive; back up `kc_db` before applying).
 
 > All endpoints require JWT unless in demo mode.
 
