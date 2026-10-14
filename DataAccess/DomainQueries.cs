@@ -67,6 +67,25 @@ namespace Knowledge_Center_API.DataAccess
                 ""DomainId"" = @DomainId;
         ";
 
+        // Promotes a knowledge node to a domain: creates the domain and moves the node
+        // under it in one statement. The node keeps its id, so its log entries, actions
+        // and Learn session links come along untouched. The insert is guarded so a
+        // missing node can't leave an orphan domain behind (CTE writes always run).
+        public static readonly string PromoteKnowledgeNodeToDomain = @"
+            WITH ""NewDomain"" AS (
+                INSERT INTO ""Domains""
+                    (""DomainName"", ""DomainDescription"", ""DomainStatus"", ""CreatedAt"", ""LastUsed"")
+                SELECT @DomainName, @DomainDescription, 'Active', @Now, @Now
+                WHERE EXISTS (SELECT 1 FROM ""KnowledgeNodes"" WHERE ""Id"" = @NodeId)
+                RETURNING ""DomainId""
+            )
+            UPDATE ""KnowledgeNodes""
+            SET ""DomainId"" = (SELECT ""DomainId"" FROM ""NewDomain""),
+                ""LastUpdated"" = @Now
+            WHERE ""Id"" = @NodeId
+            RETURNING ""DomainId"";
+        ";
+
         public static readonly string ArchiveDomain = @"
             UPDATE ""Domains""
             SET ""IsArchived"" = TRUE, ""ArchivedAt"" = @ArchivedAt

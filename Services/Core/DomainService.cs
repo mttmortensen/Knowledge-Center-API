@@ -231,6 +231,41 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
+        // === PROMOTE ===
+
+        // Turns a knowledge node into a domain. A domain needs a node, so the node
+        // itself moves under the new domain — its logs and actions go with it.
+        // Returns the new domain's id, or null when the node doesn't exist.
+        public int? PromoteKnowledgeNodeToDomain(int nodeId)
+        {
+            FieldValidator.ValidateId(nodeId, "KnowledgeNode ID");
+
+            var lookupParams = new List<NpgsqlParameter> { new NpgsqlParameter("@Id", nodeId) };
+            var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, lookupParams);
+            if (rawDBResults.Count == 0)
+                return null;
+
+            var node = rawDBResults[0];
+            if (Convert.ToBoolean(node["IsArchived"]))
+                throw new ArgumentException("Unarchive the knowledge node before promoting it.");
+
+            // Node descriptions allow 500 chars, domain descriptions only 300.
+            string description = node["Description"]?.ToString() ?? string.Empty;
+            if (description.Length > 300)
+                description = description.Substring(0, 299) + "…";
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = nodeId },
+                new NpgsqlParameter("@DomainName", NpgsqlDbType.Varchar, 100) { Value = node["Title"].ToString() },
+                new NpgsqlParameter("@DomainDescription", NpgsqlDbType.Varchar, 300) { Value = description },
+                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
+            };
+
+            int newDomainId = _database.ExecuteScalar<int>(DomainQueries.PromoteKnowledgeNodeToDomain, parameters);
+            return newDomainId > 0 ? newDomainId : null;
+        }
+
         // === ARCHIVE ===
         public bool ArchiveDomain(int domainId)
         {

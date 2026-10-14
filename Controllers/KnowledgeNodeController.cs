@@ -19,12 +19,14 @@ namespace Knowledge_Center_API.Controllers
         private readonly KnowledgeNodeService _knowledgeNodeService;
         private readonly LogEntryService _logEntryService;
         private readonly ActionService _actionService;
+        private readonly DomainService _domainService;
 
-        public KnowledgeNodeController(KnowledgeNodeService knService, LogEntryService lgService, ActionService actionService)
+        public KnowledgeNodeController(KnowledgeNodeService knService, LogEntryService lgService, ActionService actionService, DomainService domainService)
         {
             _knowledgeNodeService = knService;
             _logEntryService = lgService;
             _actionService = actionService;
+            _domainService = domainService;
         }
 
         /// <summary>
@@ -228,6 +230,43 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(500, new { message = "Node not found or delete failed." });
 
             return Ok(new { message = "Node and related logs deleted successfully." });
+        }
+
+        /// <summary>
+        /// Promotes a knowledge node to a domain. The new domain takes the node's
+        /// title and description, and the node (with its logs and actions) moves under it.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
+        [HttpPost("{id}/promote")]
+        public IActionResult Promote(int id)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Promote operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
+            {
+                int? domainId = _domainService.PromoteKnowledgeNodeToDomain(id);
+                if (domainId == null)
+                    return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
+
+                var domain = _domainService.GetDomainByIdWithKNs(domainId.Value);
+                return CreatedAtAction(nameof(DomainController.GetById), "Domain", new { id = domainId.Value }, domain);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
         }
 
         /// <summary>
