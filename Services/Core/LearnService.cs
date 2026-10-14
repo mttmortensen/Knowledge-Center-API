@@ -268,6 +268,31 @@ namespace Knowledge_Center_API.Services.Core
             return updated;
         }
 
+        /*
+         * Records which log was made from this entry (null clears it). Learn only
+         * stores the id; the FK rejects a log that doesn't exist.
+         */
+        public bool SetEntryLog(int entryId, int? logId)
+        {
+            FieldValidator.ValidateId(entryId, "Entry ID");
+            if (logId.HasValue) FieldValidator.ValidateId(logId.Value, "Log ID");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@EntryId", NpgsqlDbType.Integer) { Value = entryId },
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId.HasValue ? logId.Value : DBNull.Value }
+            };
+
+            try
+            {
+                return _database.ExecuteNonQuery(LearnQueries.UpdateEntryLog, parameters) > 0;
+            }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+            {
+                throw new ArgumentException($"Log with ID {logId} not found.");
+            }
+        }
+
         // === DELETE ===
 
         /*
@@ -385,7 +410,8 @@ namespace Knowledge_Center_API.Services.Core
             Position = Convert.ToInt64(row["Position"]),
             Source = row["Source"].ToString(),
             CreatedAt = Convert.ToDateTime(row["CreatedAt"]),
-            UpdatedAt = Convert.ToDateTime(row["UpdatedAt"])
+            UpdatedAt = Convert.ToDateTime(row["UpdatedAt"]),
+            LogId = row["LogId"] is DBNull ? null : Convert.ToInt32(row["LogId"])
         };
     }
 }

@@ -33,6 +33,7 @@
 		<None Include="..\..\SQL\create_actions_table.sql" Link="SQL\create_actions_table.sql" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\SQL\add_action_follow_up.sql" Link="SQL\add_action_follow_up.sql" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\SQL\create_learn_tables.sql" Link="SQL\create_learn_tables.sql" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\SQL\add_learn_entry_log_link.sql" Link="SQL\add_learn_entry_log_link.sql" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 </Project>

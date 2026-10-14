@@ -10,12 +10,13 @@ namespace Knowledge_Center_API.Tests
     /*
      * Rebuilds the KC_TEST_DB schema once for the class and seeds one domain, one
      * Knowledge Node (for the NodeId label) and one log (to prove Learn leaves
-     * Logs alone).
+     * Logs alone, and to link entries to).
      */
     public class LearnDbFixture : IDisposable
     {
         public TestApiFactory Factory { get; } = new();
         public int NodeId { get; }
+        public int LogId { get; }
 
         public LearnDbFixture()
         {
@@ -25,7 +26,7 @@ namespace Knowledge_Center_API.Tests
             int domainId = TestDatabase.Scalar(@"INSERT INTO ""Domains"" (""DomainName"", ""DomainStatus"") VALUES ('Test domain', 'Active') RETURNING ""DomainId"";");
             // Every column filled: the existing KnowledgeNode read path assumes non-null values.
             NodeId = TestDatabase.Scalar($@"INSERT INTO ""KnowledgeNodes"" (""Title"", ""Description"", ""ConfidenceLevel"", ""Status"", ""CreatedAt"", ""LastUpdated"", ""DomainId"") VALUES ('Test node', 'Seeded for tests', 1, 'Learning', now(), now(), {domainId}) RETURNING ""Id"";");
-            TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({NodeId}, now(), 'Seeded log', 'Seeded log body') RETURNING ""LogId"";");
+            LogId = TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({NodeId}, now(), 'Seeded log', 'Seeded log body') RETURNING ""LogId"";");
         }
 
         // One session token for the whole class: AuthSession keeps one token per
@@ -266,6 +267,57 @@ namespace Knowledge_Center_API.Tests
         }
 
         [DbFact]
+        public async Task LogLink_SetsAndClearsWithoutTouchingTheLog()
+        {
+            var (client, session) = await NewSession();
+            var entry = await AddEntry(client, session.SessionId, "worth keeping");
+            Assert.Null(entry.LogId);
+            string logTitle = $@"SELECT COUNT(*) FROM ""LogEntries"" WHERE ""LogId"" = {_fx.LogId} AND ""Title"" = 'Seeded log'";
+
+            var set = await client.PutAsJsonAsync($"/kc/api/learn/entries/{entry.EntryId}/log", new { LogId = _fx.LogId });
+            Assert.Equal(HttpStatusCode.OK, set.StatusCode);
+            Assert.Equal(_fx.LogId, (await set.Content.ReadFromJsonAsync<LearnEntry>())!.LogId);
+            Assert.Equal(_fx.LogId, (await GetSession(client, session.SessionId)).Entries.Single().LogId);
+            Assert.Equal(1, TestDatabase.Scalar(logTitle));
+
+            // Editing the source keeps the link.
+            await client.PutAsJsonAsync($"/kc/api/learn/entries/{entry.EntryId}", new { Source = "still worth keeping" });
+            Assert.Equal(_fx.LogId, (await GetSession(client, session.SessionId)).Entries.Single().LogId);
+
+            var clear = await client.PutAsJsonAsync($"/kc/api/learn/entries/{entry.EntryId}/log", new { LogId = 0 });
+            Assert.Equal(HttpStatusCode.OK, clear.StatusCode);
+            Assert.Null((await clear.Content.ReadFromJsonAsync<LearnEntry>())!.LogId);
+        }
+
+        [DbFact]
+        public async Task LogLink_RejectsUnknownLogAndEntry()
+        {
+            var (client, session) = await NewSession();
+            var entry = await AddEntry(client, session.SessionId, "note");
+
+            var badLog = await client.PutAsJsonAsync($"/kc/api/learn/entries/{entry.EntryId}/log", new { LogId = 999999 });
+            Assert.Equal(HttpStatusCode.BadRequest, badLog.StatusCode);
+            Assert.Contains("999999", await ErrorMessage(badLog));
+
+            var badEntry = await client.PutAsJsonAsync("/kc/api/learn/entries/999999/log", new { LogId = _fx.LogId });
+            Assert.Equal(HttpStatusCode.NotFound, badEntry.StatusCode);
+        }
+
+        [DbFact]
+        public async Task LogLink_ClearsWhenTheLogIsDeleted()
+        {
+            var (client, session) = await NewSession();
+            var entry = await AddEntry(client, session.SessionId, "short-lived log");
+            int logId = TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({_fx.NodeId}, now(), 'Temp', 'Temp') RETURNING ""LogId"";");
+            await client.PutAsJsonAsync($"/kc/api/learn/entries/{entry.EntryId}/log", new { LogId = logId });
+
+            Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/kc/api/logs/{logId}")).StatusCode);
+
+            var after = await GetSession(client, session.SessionId);
+            Assert.Null(Assert.Single(after.Entries).LogId);
+        }
+
+        [DbFact]
         public async Task Export_ReturnsMarkdownInTimelineOrder()
         {
             var (client, session) = await NewSession("Export me");
@@ -321,6 +373,7 @@ namespace Knowledge_Center_API.Tests
             Assert.Equal("question", (await create.Content.ReadFromJsonAsync<LearnEntry>())!.EntryType);
 
             Assert.Equal(HttpStatusCode.Forbidden, (await _client.PutAsJsonAsync("/kc/api/learn/entries/1", new { Source = "x" })).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, (await _client.PutAsJsonAsync("/kc/api/learn/entries/1/log", new { LogId = 1 })).StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, (await _client.DeleteAsync("/kc/api/learn/entries/1")).StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, (await _client.DeleteAsync("/kc/api/learn/sessions/1")).StatusCode);
         }

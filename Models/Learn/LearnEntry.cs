@@ -6,6 +6,7 @@ namespace Knowledge_Center_API.Models.Learn
      * Source (raw markdown) is the only stored content. EntryType, QuestionStatus,
      * and AnswersEntryId are derived from it on every read by
      * LearnSourceParser, so they can never drift from what was written.
+     * LogId is stored separately and only records which log was made from it.
      */
     public class LearnEntry
     {
@@ -15,6 +16,9 @@ namespace Knowledge_Center_API.Models.Learn
         public string Source { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        /// <summary>The log made from this entry, if any. Cleared when that log is deleted.</summary>
+        public int? LogId { get; set; }
 
         // === Derived (read-only) ===
 
