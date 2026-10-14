@@ -64,6 +64,12 @@ namespace Knowledge_Center_API.DataAccess
             WHERE ""Id"" = @Id;
         ";
 
+        public static readonly string MoveAction = @"
+            UPDATE ""Actions""
+            SET ""KnowledgeNodeId"" = @KnowledgeNodeId
+            WHERE ""Id"" = @Id;
+        ";
+
         public static readonly string DeleteAction = @"
             DELETE FROM ""Actions""
             WHERE ""Id"" = @Id;

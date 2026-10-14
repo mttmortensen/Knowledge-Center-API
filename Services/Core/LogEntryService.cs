@@ -136,6 +136,32 @@ namespace Knowledge_Center_API.Services.Core
             return rowsAffected > 0;
         }
 
+        // Moves a log to another Knowledge Node. The log keeps its id, so its tags
+        // and any Learn entry linked to it come along. Returns false when the log
+        // doesn't exist; throws when the target node is missing or archived.
+        public bool MoveLogEntry(int logId, int nodeId)
+        {
+            FieldValidator.ValidateId(logId, "Log ID");
+            FieldValidator.ValidateId(nodeId, "KnowledgeNode ID");
+
+            // KnowledgeNodeService depends on this service, so look the node up directly.
+            var nodeParams = new List<NpgsqlParameter> { new NpgsqlParameter("@Id", nodeId) };
+            var nodeRows = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, nodeParams);
+            if (nodeRows.Count == 0)
+                throw new ArgumentException($"KnowledgeNode with ID {nodeId} not found.");
+            if (Convert.ToBoolean(nodeRows[0]["IsArchived"]))
+                throw new ArgumentException("Unarchive the knowledge node before moving logs into it.");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@LogId", NpgsqlDbType.Integer) { Value = logId },
+                new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = nodeId }
+            };
+
+            int rowsAffected = _database.ExecuteNonQuery(LogEntryQueries.MoveLogEntry, parameters);
+            return rowsAffected > 0;
+        }
+
         // === READ ===
 
         public List<LogEntry> GetAllLogEntries()

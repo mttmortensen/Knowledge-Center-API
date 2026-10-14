@@ -234,6 +234,42 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
+        /// Moves a knowledge node (with its logs and actions) to another domain.
+        /// </summary>
+        /// <param name="id">Knowledge node ID.</param>
+        /// <param name="dto">The domain to move it to.</param>
+        [HttpPut("{id}/move")]
+        public IActionResult Move(int id, [FromBody] KnowledgeNodeMoveDto dto)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
+            {
+                bool success = _knowledgeNodeService.MoveKnowledgeNode(id, dto.DomainId);
+                if (!success)
+                    return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
+
+                return Ok(_knowledgeNodeService.GetKnowledgeNodeWithLogsById(id));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        /// <summary>
         /// Promotes a knowledge node to a domain. The new domain takes the node's
         /// title and description, and the node (with its logs and actions) moves under it.
         /// The optional body renames the domain and/or the moved node.

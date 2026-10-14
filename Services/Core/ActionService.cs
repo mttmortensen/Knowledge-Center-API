@@ -138,6 +138,31 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
+        // Moves an action to another Knowledge Node, keeping its status, dates and
+        // follow-up. Returns false when the action doesn't exist; throws when the
+        // target node is missing or archived.
+        public bool MoveAction(int id, int nodeId)
+        {
+            FieldValidator.ValidateId(id, "Action ID");
+            FieldValidator.ValidateId(nodeId, "KnowledgeNode ID");
+
+            var nodeParams = new List<NpgsqlParameter> { new NpgsqlParameter("@Id", nodeId) };
+            var nodeRows = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, nodeParams);
+            if (nodeRows.Count == 0)
+                throw new ArgumentException($"KnowledgeNode with ID {nodeId} not found.");
+            if (Convert.ToBoolean(nodeRows[0]["IsArchived"]))
+                throw new ArgumentException("Unarchive the knowledge node before moving actions into it.");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = id },
+                new NpgsqlParameter("@KnowledgeNodeId", NpgsqlDbType.Integer) { Value = nodeId }
+            };
+
+            int result = _database.ExecuteNonQuery(ActionQueries.MoveAction, parameters);
+            return result > 0;
+        }
+
         public bool CompleteAction(int id, string? followUp = null)
         {
             var existing = GetActionById(id);

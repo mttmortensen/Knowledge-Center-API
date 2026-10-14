@@ -139,7 +139,11 @@ namespace Knowledge_Center_API.Services.Core
             if (!string.IsNullOrWhiteSpace(dto.Status)) existingKNDto.Status = dto.Status;
             if (!string.IsNullOrWhiteSpace(dto.NodeType)) existingKNDto.NodeType = dto.NodeType;
             if (dto.ConfidenceLevel.HasValue) existingKNDto.ConfidenceLevel = dto.ConfidenceLevel.Value;
-            if (dto.DomainId.HasValue) existingKNDto.DomainId = dto.DomainId.Value;
+            if (dto.DomainId.HasValue && dto.DomainId.Value != existingKNDto.DomainId)
+            {
+                EnsureDomainCanTakeNodes(dto.DomainId.Value);
+                existingKNDto.DomainId = dto.DomainId.Value;
+            }
 
             existingKNDto.LastUpdated = AppClock.Now;
 
@@ -189,6 +193,42 @@ namespace Knowledge_Center_API.Services.Core
 
             // Return true to see if UPDATE was successful
             return result > 0;
+        }
+
+        // Moves a node to another domain. The node keeps its id, so its logs and
+        // actions come along. Returns false when the node doesn't exist; throws
+        // when the target domain is missing or archived.
+        public bool MoveKnowledgeNode(int nodeId, int domainId)
+        {
+            FieldValidator.ValidateId(nodeId, "KnowledgeNode ID");
+            EnsureDomainCanTakeNodes(domainId);
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = nodeId },
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId },
+                new NpgsqlParameter("@LastUpdated", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
+            };
+
+            int result = _database.ExecuteNonQuery(KnowledgeNodeQueries.MoveKnowledgeNode, parameters);
+            return result > 0;
+        }
+
+        // DomainService depends on this service, so look the domain up directly.
+        private void EnsureDomainCanTakeNodes(int domainId)
+        {
+            FieldValidator.ValidateId(domainId, "Domain ID");
+
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@DomainId", NpgsqlDbType.Integer) { Value = domainId }
+            };
+
+            var rawDBResults = _database.ExecuteQuery(DomainQueries.GetDomainById, parameters);
+            if (rawDBResults.Count == 0)
+                throw new ArgumentException($"Domain with ID {domainId} not found.");
+            if (Convert.ToBoolean(rawDBResults[0]["IsArchived"]))
+                throw new ArgumentException("Unarchive the domain before moving knowledge nodes into it.");
         }
 
         // === EXISTENCE CHECK ===

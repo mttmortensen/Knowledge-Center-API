@@ -297,6 +297,38 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
+        /// Moves an action to another knowledge node, keeping its status and follow-up.
+        /// </summary>
+        /// <param name="id">Action ID.</param>
+        /// <param name="dto">The knowledge node to move it to.</param>
+        [HttpPut("{id}/move")]
+        public IActionResult Move(int id, [FromBody] ActionItemMoveDto dto)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
+            {
+                bool success = _actionService.MoveAction(id, dto.KnowledgeNodeId);
+                if (!success)
+                    return NotFound(new { message = $"Action with ID {id} not found." });
+
+                return Ok(_actionService.GetActionById(id));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Reopens a completed action.
         /// </summary>
         /// <param name="id">Action ID.</param>

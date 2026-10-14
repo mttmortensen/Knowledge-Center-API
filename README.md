@@ -63,6 +63,15 @@ the log the web app made from it (cleared if that log is deleted).
 
 Schema: `SQL/create_learn_tables.sql`, then `SQL/add_learn_entry_log_link.sql` (both additive; back up `kc_db` before applying).
 
+### Moving things
+
+Moved items keep their ids, so tags, Learn links and child logs/actions come along.
+The target must exist and not be archived (400 otherwise).
+
+- `PUT /api/logs/{id}/move` — Move a log to another Knowledge Node (`NodeId`)
+- `PUT /api/actions/{id}/move` — Move an action to another Knowledge Node (`KnowledgeNodeId`)
+- `PUT /api/knowledge-nodes/{id}/move` — Move a Knowledge Node to another Domain (`DomainId`)
+
 > All endpoints require JWT unless in demo mode.
 
 ## 🧱 Architecture Style

@@ -183,6 +183,48 @@ namespace Knowledge_Center_API.Controllers
         }
 
         /// <summary>
+        /// Moves a log entry to another knowledge node, keeping its tags and Learn link.
+        /// </summary>
+        /// <param name="id">The ID of the log entry to move.</param>
+        /// <param name="dto">The knowledge node to move it to.</param>
+        /// <returns>200 OK with the moved log entry.</returns>
+        /// <response code="200">Log entry moved successfully.</response>
+        /// <response code="400">Target knowledge node missing or archived.</response>
+        /// <response code="404">Log entry not found.</response>
+        [HttpPut("{id}/move")]
+        public IActionResult Move(int id, [FromBody] LogEntryMoveDto dto)
+        {
+            // Demo mode: Updating is disabled
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
+            }
+
+            // Rate Limit Check
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
+            {
+                bool success = _logEntryService.MoveLogEntry(id, dto.NodeId);
+                if (!success)
+                    return NotFound(new { message = $"Log with ID {id} was not found." });
+
+                return Ok(_logEntryService.GetLogEntryByLogId(id));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { message = "An unexpected error occurred." });
+            }
+        }
+
+        /// <summary>
         /// Deletes a log entry.
         /// </summary>
         /// <param name="id">The ID of the log entry to delete.</param>

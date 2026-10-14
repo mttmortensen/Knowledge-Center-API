@@ -91,6 +91,13 @@ namespace Knowledge_Center_API.DataAccess
         ";
 
 
+        public static readonly string MoveLogEntry = @"
+            UPDATE ""LogEntries""
+            SET ""NodeId"" = @NodeId
+            WHERE ""LogId"" = @LogId;
+        ";
+
+
         public static readonly string DeleteAllLogsByNodeId = @"
             DELETE FROM ""LogEntries""
             WHERE ""NodeId"" = @NodeId;

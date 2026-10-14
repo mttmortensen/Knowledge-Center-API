@@ -73,6 +73,12 @@ namespace Knowledge_Center_API.DataAccess
             WHERE ""Id"" = @Id;
         ";
 
+        public static readonly string MoveKnowledgeNode = @"
+            UPDATE ""KnowledgeNodes""
+            SET ""DomainId"" = @DomainId, ""LastUpdated"" = @LastUpdated
+            WHERE ""Id"" = @Id;
+        ";
+
         public static readonly string ArchiveKnowledgeNodesByDomainId = @"
             UPDATE ""KnowledgeNodes""
             SET ""IsArchived"" = TRUE, ""ArchivedAt"" = @ArchivedAt
