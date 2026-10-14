@@ -160,7 +160,10 @@ namespace Knowledge_Center_API.DataAccess.Demo
                         ActionText = string.Format(template, node.Title),
                         Status = completed ? "Completed" : "Open",
                         CreatedAt = createdAt,
-                        CompletedAt = completed ? createdAt.AddDays(3 + (actionId % 7)) : (DateTime?)null
+                        CompletedAt = completed ? createdAt.AddDays(3 + (actionId % 7)) : (DateTime?)null,
+                        FollowUp = completed && actionId % 2 == 0
+                            ? "Done. Worth revisiting once it has been used on something real."
+                            : null
                     });
 
                     actionId++;

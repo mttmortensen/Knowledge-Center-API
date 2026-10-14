@@ -10,5 +10,6 @@ namespace Knowledge_Center_API.Models.Actions
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public string? FollowUp { get; set; }
     }
 }

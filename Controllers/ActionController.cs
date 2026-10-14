@@ -4,6 +4,7 @@ using Knowledge_Center_API.Models.Stats;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Knowledge_Center_API.Controllers
 {
@@ -234,8 +235,10 @@ namespace Knowledge_Center_API.Controllers
         /// Marks an action as completed.
         /// </summary>
         /// <param name="id">Action ID.</param>
+        /// <param name="dto">Optional follow-up note on what happened after.</param>
         [HttpPut("{id}/complete")]
-        public IActionResult Complete(int id)
+        public IActionResult Complete(int id,
+            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] ActionItemFollowUpDto? dto)
         {
             if (User.HasClaim("demo", "true"))
             {
@@ -247,11 +250,50 @@ namespace Knowledge_Center_API.Controllers
                 return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
             }
 
-            bool success = _actionService.CompleteAction(id);
-            if (!success)
-                return NotFound(new { message = $"Action with ID {id} not found." });
+            try
+            {
+                bool success = _actionService.CompleteAction(id, dto?.FollowUp);
+                if (!success)
+                    return NotFound(new { message = $"Action with ID {id} not found." });
 
-            return Ok(_actionService.GetActionById(id));
+                return Ok(_actionService.GetActionById(id));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Adds, edits, or clears (blank text) the follow-up note on a completed action.
+        /// </summary>
+        /// <param name="id">Action ID.</param>
+        /// <param name="dto">The follow-up note.</param>
+        [HttpPut("{id}/follow-up")]
+        public IActionResult UpdateFollowUp(int id, [FromBody] ActionItemFollowUpDto dto)
+        {
+            if (User.HasClaim("demo", "true"))
+            {
+                return StatusCode(403, new { message = "Update operations are disabled in demo mode." });
+            }
+
+            if (!RateLimiter.IsAllowed(HttpContext))
+            {
+                return StatusCode(429, new { message = "Rate limit exceeded. Try again later." });
+            }
+
+            try
+            {
+                bool success = _actionService.UpdateFollowUp(id, dto.FollowUp);
+                if (!success)
+                    return NotFound(new { message = $"Action with ID {id} not found." });
+
+                return Ok(_actionService.GetActionById(id));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         /// <summary>

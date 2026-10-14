@@ -58,6 +58,12 @@ namespace Knowledge_Center_API.DataAccess
             WHERE ""Id"" = @Id;
         ";
 
+        public static readonly string UpdateActionFollowUp = @"
+            UPDATE ""Actions""
+            SET ""FollowUp"" = @FollowUp
+            WHERE ""Id"" = @Id;
+        ";
+
         public static readonly string DeleteAction = @"
             DELETE FROM ""Actions""
             WHERE ""Id"" = @Id;

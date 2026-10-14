@@ -138,17 +138,40 @@ namespace Knowledge_Center_API.Services.Core
             return result > 0;
         }
 
-        public bool CompleteAction(int id)
+        public bool CompleteAction(int id, string? followUp = null)
         {
             var existing = GetActionById(id);
             if (existing == null)
                 return false;
 
-            // Idempotent: already completed, nothing to do
+            // A blank follow-up on complete means "no note this time", not "clear the note"
+            if (!string.IsNullOrWhiteSpace(followUp))
+            {
+                FieldValidator.ValidateOptionalString(followUp, "FollowUp", 2000);
+                if (!SetActionFollowUp(id, followUp.Trim()))
+                    return false;
+            }
+
+            // Idempotent: already completed, nothing more to do
             if (existing.Status == "Completed")
                 return true;
 
             return SetActionStatus(id, "Completed", AppClock.Now);
+        }
+
+        // Adds, edits or clears (blank) the follow-up note on a completed action.
+        public bool UpdateFollowUp(int id, string? followUp)
+        {
+            var existing = GetActionById(id);
+            if (existing == null)
+                return false;
+
+            if (existing.Status != "Completed")
+                throw new ArgumentException("A follow-up can only be added to a completed action.");
+
+            FieldValidator.ValidateOptionalString(followUp, "FollowUp", 2000);
+
+            return SetActionFollowUp(id, string.IsNullOrWhiteSpace(followUp) ? null : followUp.Trim());
         }
 
         public bool ReopenAction(int id)
@@ -177,6 +200,21 @@ namespace Knowledge_Center_API.Services.Core
             };
 
             int result = _database.ExecuteNonQuery(ActionQueries.UpdateActionStatus, parameters);
+            return result > 0;
+        }
+
+        private bool SetActionFollowUp(int id, string? followUp)
+        {
+            var parameters = new List<NpgsqlParameter>
+            {
+                new NpgsqlParameter("@Id", NpgsqlDbType.Integer) { Value = id },
+                new NpgsqlParameter("@FollowUp", NpgsqlDbType.Varchar, 2000)
+                {
+                    Value = followUp != null ? followUp : DBNull.Value
+                }
+            };
+
+            int result = _database.ExecuteNonQuery(ActionQueries.UpdateActionFollowUp, parameters);
             return result > 0;
         }
 
@@ -248,7 +286,10 @@ namespace Knowledge_Center_API.Services.Core
                 CreatedAt = Convert.ToDateTime(rawDBRow["CreatedAt"]),
                 CompletedAt = rawDBRow["CompletedAt"] == null || rawDBRow["CompletedAt"] == DBNull.Value
                     ? (DateTime?)null
-                    : Convert.ToDateTime(rawDBRow["CompletedAt"])
+                    : Convert.ToDateTime(rawDBRow["CompletedAt"]),
+                FollowUp = rawDBRow["FollowUp"] == null || rawDBRow["FollowUp"] == DBNull.Value
+                    ? null
+                    : rawDBRow["FollowUp"].ToString()
             };
         }
     }
