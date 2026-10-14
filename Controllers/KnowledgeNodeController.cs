@@ -4,6 +4,7 @@ using Knowledge_Center_API.Models.LogEntries;
 using Knowledge_Center_API.Services.Core;
 using Knowledge_Center_API.Services.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Knowledge_Center_API.Controllers
 {
@@ -235,10 +236,12 @@ namespace Knowledge_Center_API.Controllers
         /// <summary>
         /// Promotes a knowledge node to a domain. The new domain takes the node's
         /// title and description, and the node (with its logs and actions) moves under it.
+        /// The optional body renames the domain and/or the moved node.
         /// </summary>
         /// <param name="id">Knowledge node ID.</param>
         [HttpPost("{id}/promote")]
-        public IActionResult Promote(int id)
+        public IActionResult Promote(int id,
+            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] KnowledgeNodePromoteDto? dto)
         {
             if (User.HasClaim("demo", "true"))
             {
@@ -252,7 +255,7 @@ namespace Knowledge_Center_API.Controllers
 
             try
             {
-                int? domainId = _domainService.PromoteKnowledgeNodeToDomain(id);
+                int? domainId = _domainService.PromoteKnowledgeNodeToDomain(id, dto?.DomainName, dto?.KnowledgeNodeTitle);
                 if (domainId == null)
                     return NotFound(new { message = $"Knowledge Node with ID {id} not found." });
 

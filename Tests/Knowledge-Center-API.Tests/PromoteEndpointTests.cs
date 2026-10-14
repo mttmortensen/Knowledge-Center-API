@@ -72,6 +72,38 @@ namespace Knowledge_Center_API.Tests
         }
 
         [DbFact]
+        public async Task Promote_WithNames_NamesTheDomainAndRenamesTheMovedNode()
+        {
+            var (_, nodeId) = SeedNode("Kubernetes");
+            var client = _fx.CreateClient();
+
+            var res = await client.PostAsJsonAsync($"/kc/api/knowledge-nodes/{nodeId}/promote",
+                new { DomainName = "  Containers  ", KnowledgeNodeTitle = "Kubernetes basics" });
+            Assert.Equal(HttpStatusCode.Created, res.StatusCode);
+
+            var domain = (await res.Content.ReadFromJsonAsync<DomainWithKNsDto>())!;
+            Assert.Equal("Containers", domain.DomainName);
+            var movedNode = Assert.Single(domain.KnowledgeNodes);
+            Assert.Equal(nodeId, movedNode.Id);
+            Assert.Equal("Kubernetes basics", movedNode.Title);
+            Assert.Equal(1, TestDatabase.Scalar($@"SELECT COUNT(*) FROM ""LogEntries"" WHERE ""NodeId"" = {nodeId};"));
+            Assert.Equal(1, TestDatabase.Scalar($@"SELECT COUNT(*) FROM ""Actions"" WHERE ""KnowledgeNodeId"" = {nodeId};"));
+        }
+
+        [DbFact]
+        public async Task Promote_TooLongNodeTitle_Returns400AndCreatesNoDomain()
+        {
+            var (_, nodeId) = SeedNode("Too long");
+            int before = TestDatabase.Scalar(@"SELECT COUNT(*) FROM ""Domains"";");
+
+            var res = await _fx.CreateClient().PostAsJsonAsync($"/kc/api/knowledge-nodes/{nodeId}/promote",
+                new { KnowledgeNodeTitle = new string('x', 101) });
+
+            Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+            Assert.Equal(before, TestDatabase.Scalar(@"SELECT COUNT(*) FROM ""Domains"";"));
+        }
+
+        [DbFact]
         public async Task Promote_MissingNode_Returns404AndCreatesNoDomain()
         {
             int before = TestDatabase.Scalar(@"SELECT COUNT(*) FROM ""Domains"";");

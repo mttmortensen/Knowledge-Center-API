@@ -235,10 +235,14 @@ namespace Knowledge_Center_API.Services.Core
 
         // Turns a knowledge node into a domain. A domain needs a node, so the node
         // itself moves under the new domain — its logs and actions go with it.
-        // Returns the new domain's id, or null when the node doesn't exist.
-        public int? PromoteKnowledgeNodeToDomain(int nodeId)
+        // A blank domainName names the domain after the node; a blank nodeTitle
+        // keeps the node's title. Returns the new domain's id, or null when the
+        // node doesn't exist.
+        public int? PromoteKnowledgeNodeToDomain(int nodeId, string? domainName = null, string? nodeTitle = null)
         {
             FieldValidator.ValidateId(nodeId, "KnowledgeNode ID");
+            FieldValidator.ValidateOptionalString(domainName?.Trim() ?? string.Empty, "Domain Name", 100);
+            FieldValidator.ValidateOptionalString(nodeTitle?.Trim() ?? string.Empty, "Knowledge Node Title", 100);
 
             var lookupParams = new List<NpgsqlParameter> { new NpgsqlParameter("@Id", nodeId) };
             var rawDBResults = _database.ExecuteQuery(KnowledgeNodeQueries.GetKnowledgeNodeById, lookupParams);
@@ -254,10 +258,15 @@ namespace Knowledge_Center_API.Services.Core
             if (description.Length > 300)
                 description = description.Substring(0, 299) + "…";
 
+            string currentTitle = node["Title"].ToString() ?? string.Empty;
+            string newDomainName = string.IsNullOrWhiteSpace(domainName) ? currentTitle : domainName.Trim();
+            string newNodeTitle = string.IsNullOrWhiteSpace(nodeTitle) ? currentTitle : nodeTitle.Trim();
+
             var parameters = new List<NpgsqlParameter>
             {
                 new NpgsqlParameter("@NodeId", NpgsqlDbType.Integer) { Value = nodeId },
-                new NpgsqlParameter("@DomainName", NpgsqlDbType.Varchar, 100) { Value = node["Title"].ToString() },
+                new NpgsqlParameter("@DomainName", NpgsqlDbType.Varchar, 100) { Value = newDomainName },
+                new NpgsqlParameter("@NodeTitle", NpgsqlDbType.Varchar, 100) { Value = newNodeTitle },
                 new NpgsqlParameter("@DomainDescription", NpgsqlDbType.Varchar, 300) { Value = description },
                 new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
             };

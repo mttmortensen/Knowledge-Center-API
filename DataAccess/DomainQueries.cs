@@ -81,6 +81,7 @@ namespace Knowledge_Center_API.DataAccess
             )
             UPDATE ""KnowledgeNodes""
             SET ""DomainId"" = (SELECT ""DomainId"" FROM ""NewDomain""),
+                ""Title"" = @NodeTitle,
                 ""LastUpdated"" = @Now
             WHERE ""Id"" = @NodeId
             RETURNING ""DomainId"";
