@@ -3,6 +3,7 @@ using Knowledge_Center_API.Models.Domains;
 using Knowledge_Center_API.Models.KnowledgeNodes;
 using Knowledge_Center_API.Models.Learn;
 using Knowledge_Center_API.Models.LogEntries;
+using Knowledge_Center_API.Models.Seasons;
 using Knowledge_Center_API.Models.TagEntries;
 using Knowledge_Center_API.Services.Core;
 
@@ -17,6 +18,8 @@ namespace Knowledge_Center_API.DataAccess.Demo
         public static readonly List<ActionItem> Actions;
         public static readonly List<LearnSession> LearnSessions;
         public static readonly List<LearnEntry> LearnEntries;
+        public static readonly List<Season> Seasons;
+        public static readonly Dictionary<int, List<SeasonDomain>> SeasonDomains;
 
         static DemoData()
         {
@@ -212,6 +215,74 @@ namespace Knowledge_Center_API.DataAccess.Demo
             LearnSourceParser.Annotate(LearnEntries);
             LearnSessions[0].EntryCount = LearnEntries.Count;
             LearnSessions[0].OpenQuestionCount = LearnEntries.Count(e => e.QuestionStatus == "open");
+
+            // Three seasons: one ended (over the stretch where most demo logs
+            // land), the active one (which picks up the Learn session above) and
+            // a planned next one.
+            var today = AppClock.Today;
+
+            Seasons = new List<Season>
+            {
+                new Season
+                {
+                    SeasonId = 1,
+                    Name = "Spring: Distributed Systems + ML",
+                    Intention = "Get comfortable with consensus algorithms and train a first model end to end.",
+                    Status = "Ended",
+                    PlannedStart = today.AddDays(-190),
+                    PlannedEnd = today.AddDays(-130),
+                    StartedAt = now.AddDays(-190),
+                    EndedAt = now.AddDays(-130),
+                    Reflection = "Two focuses was the right call. Distributed Systems got most of the time; ML needed a clearer goal.",
+                    CreatedAt = now.AddDays(-195),
+                    UpdatedAt = now.AddDays(-130)
+                },
+                new Season
+                {
+                    SeasonId = 2,
+                    Name = "Autumn: Databases + Compilers",
+                    Intention = "Understand query planning well enough to read any EXPLAIN, and write a toy parser.",
+                    Status = "Active",
+                    PlannedStart = today.AddDays(-20),
+                    PlannedEnd = today.AddDays(40),
+                    StartedAt = now.AddDays(-20),
+                    CreatedAt = now.AddDays(-25),
+                    UpdatedAt = now.AddDays(-20)
+                },
+                new Season
+                {
+                    SeasonId = 3,
+                    Name = "Winter: Machine Learning deep dive",
+                    Status = "Planned",
+                    PlannedStart = today.AddDays(40),
+                    PlannedEnd = today.AddDays(100),
+                    CreatedAt = now.AddDays(-5),
+                    UpdatedAt = now.AddDays(-5)
+                }
+            };
+
+            SeasonDomain Member(int domainId, string role, string? note = null) => new SeasonDomain
+            {
+                DomainId = domainId,
+                DomainName = Domains.First(d => d.DomainId == domainId).DomainName,
+                Role = role,
+                Note = note,
+                IsArchived = Domains.First(d => d.DomainId == domainId).IsArchived
+            };
+
+            SeasonDomains = new Dictionary<int, List<SeasonDomain>>
+            {
+                [1] = new() { Member(1, "Focus"), Member(2, "Focus"), Member(3, "Passive", "Covered at work") },
+                [2] = new() { Member(5, "Focus"), Member(4, "Focus"), Member(3, "Passive", "Covered at work") },
+                [3] = new() { Member(2, "Focus") }
+            };
+
+            foreach (var season in Seasons)
+            {
+                season.FocusCount = SeasonDomains[season.SeasonId].Count(m => m.Role == "Focus");
+                season.PassiveCount = SeasonDomains[season.SeasonId].Count(m => m.Role == "Passive");
+                SeasonService.ApplyDerivedFields(season, today);
+            }
         }
     }
 }
