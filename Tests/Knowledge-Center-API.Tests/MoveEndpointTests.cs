@@ -31,6 +31,7 @@ namespace Knowledge_Center_API.Tests
         public void Dispose() => Factory.Dispose();
     }
 
+    [Collection(DatabaseCollection.Name)]
     public class MoveEndpointTests : IClassFixture<MoveDbFixture>
     {
         private readonly MoveDbFixture _fx;

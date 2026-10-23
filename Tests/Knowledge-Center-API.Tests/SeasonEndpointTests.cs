@@ -32,6 +32,7 @@ namespace Knowledge_Center_API.Tests
         public void Dispose() => Factory.Dispose();
     }
 
+    [Collection(DatabaseCollection.Name)]
     public class SeasonEndpointTests : IClassFixture<SeasonDbFixture>
     {
         private readonly SeasonDbFixture _fx;

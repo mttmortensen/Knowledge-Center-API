@@ -43,6 +43,7 @@ namespace Knowledge_Center_API.Tests
         public void Dispose() => Factory.Dispose();
     }
 
+    [Collection(DatabaseCollection.Name)]
     public class LearnEndpointTests : IClassFixture<LearnDbFixture>
     {
         private readonly LearnDbFixture _fx;

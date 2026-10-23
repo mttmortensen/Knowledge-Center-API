@@ -45,6 +45,18 @@ namespace Knowledge_Center_API.Tests
         }
     }
 
+    /*
+     * Every DB-backed test class shares the one KC_TEST_DB database, and each
+     * one's fixture wipes and rebuilds it. xUnit runs test classes in parallel
+     * by default, which let one class's Reset() drop the schema out from under
+     * another class mid-test. Classes in this collection run one at a time.
+     */
+    [CollectionDefinition(Name, DisableParallelization = true)]
+    public class DatabaseCollection
+    {
+        public const string Name = "Database";
+    }
+
     /// <summary>A [Fact] that is skipped unless KC_TEST_DB is set.</summary>
     public sealed class DbFactAttribute : FactAttribute
     {
