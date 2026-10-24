@@ -496,6 +496,8 @@ namespace Knowledge_Center_API.Tests
             TestDatabase.Scalar($@"INSERT INTO ""LearnEntries"" (""SessionId"", ""Position"", ""Source"", ""CreatedAt"") VALUES ({unfiled}, 65536, 'note', {at}) RETURNING ""EntryId"";");
 
             // End it slightly later so everything above is inside the window.
+            // Ended straight in SQL, so there's no snapshot: this also covers the
+            // live fallback for seasons ended before snapshots existed.
             TestDatabase.Scalar($@"UPDATE ""Seasons"" SET ""Status"" = 'Ended', ""EndedAt"" = ""StartedAt"" + interval '1 minute' WHERE ""SeasonId"" = {season.SeasonId} RETURNING 1;");
 
             var stats = (await _client.GetFromJsonAsync<SeasonDetailsDto>($"/kc/api/seasons/{season.SeasonId}"))!.Stats!;
@@ -514,6 +516,60 @@ namespace Knowledge_Center_API.Tests
             Assert.Equal(66.7, stats.FocusShare);
 
             Assert.Equal(focusNode, stats.TopKnowledgeNodes[0].NodeId);
+        }
+
+        // Starts the season, backdates its start an hour so activity pinned just
+        // after it is safely inside the window by the time it ends, and returns
+        // that pinned moment as SQL.
+        private async Task<string> StartBackdated(int seasonId)
+        {
+            await _client.PostAsync($"/kc/api/seasons/{seasonId}/start", null);
+            TestDatabase.Scalar($@"UPDATE ""Seasons"" SET ""StartedAt"" = ""StartedAt"" - interval '1 hour' WHERE ""SeasonId"" = {seasonId} RETURNING 1;");
+            return $@"(SELECT ""StartedAt"" FROM ""Seasons"" WHERE ""SeasonId"" = {seasonId}) + interval '1 second'";
+        }
+
+        [DbFact]
+        public async Task Stats_EndedSeasonKeepsItsStatsWhenANodeMoves()
+        {
+            int focus = SeedDomain("Kept focus"), outside = SeedDomain("Moved to");
+            int node = SeedNode(focus, "Moving node");
+            var season = await NewSeason();
+            await PutLineup(season.SeasonId, Lineup(new[] { focus }));
+            string at = await StartBackdated(season.SeasonId);
+            TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({node}, {at}, 'Log', 'Body') RETURNING ""LogId"";");
+
+            var ended = (await (await _client.PostAsync($"/kc/api/seasons/{season.SeasonId}/end", null))
+                .Content.ReadFromJsonAsync<SeasonDetailsDto>())!;
+            TestDatabase.Scalar($@"UPDATE ""KnowledgeNodes"" SET ""DomainId"" = {outside} WHERE ""Id"" = {node} RETURNING 1;");
+            var later = (await _client.GetFromJsonAsync<SeasonDetailsDto>($"/kc/api/seasons/{season.SeasonId}"))!;
+
+            Assert.Equal(1, ended.Stats!.ByDomain.Single(d => d.DomainId == focus).Score);
+            Assert.Equal(100, later.Stats!.FocusShare);
+            Assert.Equal(("Focus", 1), (later.Stats.ByDomain.Single().Role, later.Stats.ByDomain.Single().Score));
+            Assert.Equal(focus, later.Stats.TopKnowledgeNodes[0].DomainId);
+            // Postgres keeps microseconds, so EndedAt can be a tick or two shy of the snapshot's To.
+            Assert.True(Math.Abs((later.Stats.To - ended.EndedAt!.Value).TotalMilliseconds) < 1);
+        }
+
+        [DbFact]
+        public async Task Stats_RotateSnapshotsOnlyTheSeasonBeingEnded()
+        {
+            int focus = SeedDomain("Rotating focus");
+            int node = SeedNode(focus, "Rotating node");
+            var current = await NewSeason("Current", 0);
+            var next = await NewSeason("Next", 60);
+            await PutLineup(current.SeasonId, Lineup(new[] { focus }));
+            await PutLineup(next.SeasonId, Lineup(SeedDomains(1)));
+            string at = await StartBackdated(current.SeasonId);
+            TestDatabase.Scalar($@"INSERT INTO ""LogEntries"" (""NodeId"", ""EntryDate"", ""Title"", ""Content"") VALUES ({node}, {at}, 'Log', 'Body') RETURNING ""LogId"";");
+
+            await _client.PostAsync($"/kc/api/seasons/{next.SeasonId}/rotate", null);
+            TestDatabase.Scalar($@"DELETE FROM ""LogEntries"" WHERE ""NodeId"" = {node} RETURNING 1;");
+            var old = (await _client.GetFromJsonAsync<SeasonDetailsDto>($"/kc/api/seasons/{current.SeasonId}"))!;
+
+            Assert.Equal(1, old.Stats!.Totals.Logs);
+            Assert.Equal(1, TestDatabase.Scalar($@"SELECT COUNT(*) FROM ""Seasons"" WHERE ""SeasonId"" = {current.SeasonId} AND ""StatsSnapshot"" IS NOT NULL;"));
+            Assert.Equal(0, TestDatabase.Scalar($@"SELECT COUNT(*) FROM ""Seasons"" WHERE ""SeasonId"" = {next.SeasonId} AND ""StatsSnapshot"" IS NOT NULL;"));
         }
     }
 

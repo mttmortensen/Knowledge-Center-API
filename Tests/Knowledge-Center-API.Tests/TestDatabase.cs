@@ -20,7 +20,7 @@ namespace Knowledge_Center_API.Tests
                 throw new InvalidOperationException($"Refusing to reset database '{builder.Database}': its name must contain 'test'.");
 
             string sqlDir = Path.Combine(AppContext.BaseDirectory, "SQL");
-            string[] scripts = { "postgres_schema.sql", "add_archiving.sql", "create_actions_table.sql", "add_action_follow_up.sql", "create_learn_tables.sql", "add_learn_entry_log_link.sql", "create_seasons_tables.sql" };
+            string[] scripts = { "postgres_schema.sql", "add_archiving.sql", "create_actions_table.sql", "add_action_follow_up.sql", "create_learn_tables.sql", "add_learn_entry_log_link.sql", "create_seasons_tables.sql", "add_season_stats_snapshot.sql" };
 
             using var conn = new NpgsqlConnection(ConnectionString);
             conn.Open();

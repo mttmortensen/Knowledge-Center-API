@@ -35,6 +35,11 @@ namespace Knowledge_Center_API.DataAccess
             WHERE s.""SeasonId"" = @SeasonId;
         ";
 
+        // Null until a season ends, and for seasons ended before snapshots existed.
+        public static readonly string GetStatsSnapshot = @"
+            SELECT ""StatsSnapshot""::text AS ""StatsSnapshot"" FROM ""Seasons"" WHERE ""SeasonId"" = @SeasonId;
+        ";
+
         public static readonly string GetActiveSeasonId = @"
             SELECT ""SeasonId"" FROM ""Seasons"" WHERE ""Status"" = 'Active';
         ";
@@ -70,11 +75,13 @@ namespace Knowledge_Center_API.DataAccess
             WHERE ""SeasonId"" = @SeasonId AND ""Status"" = 'Planned';
         ";
 
-        // A null reflection keeps whatever was already written.
+        // A null reflection keeps whatever was already written. The stats as of
+        // @Now are stored with it, so later moves can't change a finished season.
         public static readonly string EndSeason = @"
             UPDATE ""Seasons""
             SET ""Status"" = 'Ended', ""EndedAt"" = @Now, ""UpdatedAt"" = @Now,
-                ""Reflection"" = COALESCE(@Reflection, ""Reflection"")
+                ""Reflection"" = COALESCE(@Reflection, ""Reflection""),
+                ""StatsSnapshot"" = @StatsSnapshot
             WHERE ""SeasonId"" = @SeasonId AND ""Status"" = 'Active';
         ";
 
@@ -90,6 +97,7 @@ namespace Knowledge_Center_API.DataAccess
                 ""EndedAt"" = CASE WHEN ""SeasonId"" = @SeasonId THEN ""EndedAt"" ELSE @Now END,
                 ""Reflection"" = CASE WHEN ""SeasonId"" = @SeasonId THEN ""Reflection""
                                       ELSE COALESCE(@Reflection, ""Reflection"") END,
+                ""StatsSnapshot"" = CASE WHEN ""SeasonId"" = @SeasonId THEN ""StatsSnapshot"" ELSE @StatsSnapshot END,
                 ""UpdatedAt"" = @Now
             WHERE ((""SeasonId"" = @SeasonId AND ""Status"" = 'Planned') OR (""SeasonId"" <> @SeasonId AND ""Status"" = 'Active'))
               AND EXISTS (SELECT 1 FROM ""Seasons"" WHERE ""SeasonId"" = @SeasonId AND ""Status"" = 'Planned')

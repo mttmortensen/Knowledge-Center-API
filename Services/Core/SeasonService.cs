@@ -1,6 +1,7 @@
 using Knowledge_Center_API.DataAccess;
 using Knowledge_Center_API.Models.Seasons;
 using Knowledge_Center_API.Services.Validation;
+using System.Text.Json;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -83,7 +84,10 @@ namespace Knowledge_Center_API.Services.Core
 
             var details = ToDetails(season);
             details.Domains = GetSeasonDomains(seasonId);
-            details.Stats = GetStats(details);
+            // An ended season shows the stats it ended with; one ended before
+            // snapshots existed falls back to working them out now.
+            details.Stats = (season.Status == "Ended" ? GetStatsSnapshot(seasonId) : null)
+                ?? GetStats(details, details.EndedAt ?? AppClock.Now);
             return details;
         }
 
@@ -282,11 +286,13 @@ namespace Knowledge_Center_API.Services.Core
 
             FieldValidator.ValidateOptionalString(reflection, "Reflection", MaxReflectionLength);
 
+            DateTime now = AppClock.Now;
             var parameters = new List<NpgsqlParameter>
             {
                 new NpgsqlParameter("@SeasonId", NpgsqlDbType.Integer) { Value = seasonId },
                 new NpgsqlParameter("@Reflection", NpgsqlDbType.Text) { Value = NullIfBlank(reflection) },
-                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
+                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = now },
+                StatsSnapshotParam(season, now)
             };
 
             if (_database.ExecuteNonQuery(SeasonQueries.EndSeason, parameters) == 0)
@@ -311,11 +317,14 @@ namespace Knowledge_Center_API.Services.Core
             if (activeId <= 0)
                 throw new InvalidOperationException("No season is active to rotate out of. Start this one instead.");
 
+            DateTime now = AppClock.Now;
             var parameters = new List<NpgsqlParameter>
             {
                 new NpgsqlParameter("@SeasonId", NpgsqlDbType.Integer) { Value = seasonId },
                 new NpgsqlParameter("@Reflection", NpgsqlDbType.Text) { Value = NullIfBlank(reflection) },
-                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = AppClock.Now }
+                new NpgsqlParameter("@Now", NpgsqlDbType.Timestamp) { Value = now },
+                // The snapshot is for the season being ended, not the one starting.
+                StatsSnapshotParam(GetSeasonById(activeId)!, now)
             };
 
             if (_database.ExecuteNonQuery(SeasonQueries.RotateSeason, parameters) != 2)
@@ -326,12 +335,12 @@ namespace Knowledge_Center_API.Services.Core
 
         /* ===================== STATS ===================== */
 
-        private SeasonStatsDto? GetStats(SeasonDetailsDto season)
+        // Live stats from StartedAt to `to`; null until the season has started.
+        private SeasonStatsDto? GetStats(SeasonDetailsDto season, DateTime to)
         {
             if (season.StartedAt == null) return null;
 
             DateTime from = season.StartedAt.Value;
-            DateTime to = season.EndedAt ?? AppClock.Now;
 
             List<NpgsqlParameter> WindowParams() => new()
             {
@@ -358,6 +367,27 @@ namespace Knowledge_Center_API.Services.Core
                 from, to, nodes, season.Domains, activeDays,
                 Convert.ToInt32(learn["LearnSessions"]),
                 Convert.ToInt32(learn["UnfiledLearnEntries"]));
+        }
+
+        private SeasonStatsDto? GetStatsSnapshot(int seasonId)
+        {
+            var rows = _database.ExecuteQuery(SeasonQueries.GetStatsSnapshot, SeasonIdParam(seasonId));
+            if (rows.Count == 0 || rows[0]["StatsSnapshot"] == DBNull.Value) return null;
+
+            return JsonSerializer.Deserialize<SeasonStatsDto>(rows[0]["StatsSnapshot"].ToString()!);
+        }
+
+        // The stats a season ends with, as of the same moment written to EndedAt.
+        private NpgsqlParameter StatsSnapshotParam(Season season, DateTime endedAt)
+        {
+            var details = ToDetails(season);
+            details.Domains = GetSeasonDomains(season.SeasonId);
+            var stats = GetStats(details, endedAt);
+
+            return new NpgsqlParameter("@StatsSnapshot", NpgsqlDbType.Jsonb)
+            {
+                Value = stats == null ? DBNull.Value : JsonSerializer.Serialize(stats)
+            };
         }
 
         /* ===================== HELPERS ===================== */

@@ -1,8 +1,10 @@
 namespace Knowledge_Center_API.Models.Seasons
 {
     /*
-     * Activity from StartedAt to EndedAt (or now, while Active). Work counts
-     * under the domain its Knowledge Node is in today.
+     * Activity from StartedAt to EndedAt (or now, while Active). While a
+     * season is active, work counts under the domain its Knowledge Node is in
+     * today. An ended season keeps the stats it ended with (stored as
+     * StatsSnapshot), unless it ended before snapshots existed.
      */
     public class SeasonStatsDto
     {
